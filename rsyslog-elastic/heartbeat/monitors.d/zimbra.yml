@@ -1,0 +1,38 @@
+- type: http
+  schedule: '@every 5s'
+  urls: ["https://mind.zimbra.io:443","https://mind.zimbra.io:7071/zimbraAdmin/"]
+  tags: ["zimbra"]
+  check.response.status: 200
+  ssl:
+      verification_mode: none
+
+- type: tcp
+  schedule: '@every 5s'
+  hosts: ["mind.zimbra.io"]
+  ports: [25]
+  tags: ["zimbra"]
+
+- type: tcp
+  schedule: '@every 5s'
+  hosts: ["167.71.67.26"]
+  ports: [389]
+  tags: ["zimbra"]
+
+- type: tcp
+  schedule: '@every 5s'
+  hosts: ["167.71.67.26"]
+  ports: [7025, 7143, 7110, 7993, 7995]
+  tags: ["zimbra"]
+
+- type: tcp
+  schedule: '@every 5s'
+  hosts: ["167.71.67.26"]
+  ports: [25, 143, 110, 993, 995]
+  tags: ["zimbra"]
+
+# 25    - smtp (7025)
+# 143   - imap (7143)
+# 993   - imaps (7993)
+# 110   - pop3 (7110)
+# 995   - pop3s (7995)
+

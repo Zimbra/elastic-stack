@@ -1,0 +1,42 @@
+# Upstreams
+upstream backend {
+    server 127.0.0.1:5601;
+}
+
+# HTTPS Server
+server {
+    listen 443;
+    server_name elastic.zimbratest.tk;
+
+    # You can increase the limit if your need to.
+    client_max_body_size 200M;
+
+    error_log /var/log/nginx/elastic.access.log;
+
+    ssl on;
+    ssl_certificate /etc/letsencrypt/live/zimbratest.tk/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/zimbratest.tk/privkey.pem;
+    ssl_protocols TLSv1 TLSv1.1 TLSv1.2; # don’t use SSLv3 ref: POODLE
+
+    auth_basic "Restricted Access";
+    auth_basic_user_file /etc/nginx/htpasswd.users;
+
+    location / {
+        proxy_pass http://backend/;
+
+        proxy_http_version 1.1;
+        proxy_hide_header 'X-Frame-Options';
+        proxy_hide_header 'Access-Control-Allow-Origin';
+
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $http_host;
+
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forward-Proto http;
+        proxy_set_header X-Nginx-Proxy true;
+
+        proxy_redirect off;
+    }
+}
