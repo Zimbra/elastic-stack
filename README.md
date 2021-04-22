@@ -1,50 +1,50 @@
 # Zimbra Elastic Stack
 
-This guide describes how to use Elastic Stack with Zimbra by using Centralized Logging based on RSyslog. Main benefits of using Elastic Stack combined with Centralized Logging:
+This guide describes how to use Elastic Stack with Zimbra by using Centralized Logging based on RSyslog. The main benefits of using Elastic Stack combined with Centralized Logging:
  
 * Makes it easy to search through and analyze historic logs.
 * Visualization of log events to gather insights.
 * Storing of logs for forensic research in case of getting hacked.
 * Uptime and certificate monitoring.
 
-Both Zimbra and Elastic Stack consist of many components. The below diagram gives an insight in how the software components work together to make visualizations from raw log files. In the most simple form you can install Zimbra in a Single server set-up and add one more server for all the Elastic Stack components. Of course if you plan to scale up you may split several of the software components across more virtual machines as you see fit.
+Both Zimbra and Elastic Stack consist of many components. The below diagram gives an overview of how the software components work together to make visualizations from raw log files. In the most simple form you can install Zimbra in a single server set-up and add another server for all the Elastic Stack components. Of course, if you plan to scale up you may split several of the software components across more virtual machines as required.
 
 > ![](screenshots/zimbra-logstack.dia.png)
 *Example of a Zimbra Cluster with Elastic Stack and RSyslog.*
 
-A basic Kibana dashboard on a Zimbra server would look like this:
+A basic Kibana dashboard for a Zimbra server would look like this:
 
 > ![](screenshots/01-dashboard.png)
 *Example Elastic Stack Dashboard on a Zimbra 9 installation.*
 
-Without Elastic Stack your server only keeps the most recent log files of all the events happening on your Zimbra server. Even though you can configure your system logging to delay the compression and purging of log files, eventually log files tend to become very large and there are many log files for various components in the system. Finding a specific event in all these logs is time consuming.
+Without Elastic Stack your server only keeps the most recent log files of all the events happening on your Zimbra server. Even though you can configure your system logging to delay the compression and purging of log files, eventually log files tend to become very large and there are several log files for the various components in the system. Finding a specific event across all these logs can be time consuming.
 
-Logs that are parsed by Elastic Stack become searchable, so you without having to do all sorts of command line tricks you can search for events quickly and go back in time without spending to much time waiting for the results.
+Logs that are parsed by Elastic Stack become searchable, so you don't have to do all sorts of command line tricks to search for events quickly and go back in time without spending extended periods of time waiting for search results.
 
-In addition to the search, Elastic Stack allows you to create visualizations in a relatively easy way. This way you can get insights in the vital parameters of your system including but not limited to Postfix e-mail traffic, spam traffic, disk usage and load, CPU and RAM usage and security related events such as failed web-UI log-ins, failed SSH login attempts, IMAP and SMTP brute force attempts etc. In time this can help you to become proactive in dealing with system load and security threats.
+In addition to the search, Elastic Stack allows you to create visualizations in a relatively easy way. This way you can get insights into the vital parameters of your system, including but not limited to Postfix e-mail traffic, spam filtering, disk usage and load, CPU and RAM usage, and security related events such as failed web-UI log-ins, failed SSH login attempts, IMAP and SMTP brute force attempts etc. In time this can help you to become proactive in dealing with system load issues and security threats.
 
-Using RSyslog to gather the logs of your Zimbra servers has a couple of benefits over using Elastic stack mechanisms to gather logs:
+Using RSyslog to gather the logs of your Zimbra servers has a number of benefits over using Elastic stack mechanisms to gather logs:
 
 * No need to install Elastic Stack agent on your Zimbra servers.
 * Avoid 3rd party software repositories on your Zimbra servers.
-* RSyslog centralized logging will secure your logs in the event you get hacked.
+* RSyslog centralized logging will secure your logs in case your server logs become compromised because of hacking.
 * RSyslog centralized logging is an industry standard for securing logs for forensic researchers.
 * Maintainability.
 
-With regards to maintainability, Elastic Stack is DevOps developed software. While there is nothing wrong with that, over time things tends to change a lot. This means the mechanisms (Logstash Forwarder/Filebeat) offered for gathering logs change a lot. For example Logstash Forwarder is now deprecated and the configuration options for Filebeat change often, making it a little hard to maintain, especially if you run a Zimbra cluster. 
+With regards to maintainability, Elastic Stack is DevOps developed software. While there is nothing wrong with that, over time things tends to change a lot. This means the mechanisms (Logstash Forwarder/Filebeat) offered for gathering logs can change significantly. For example Logstash Forwarder is now deprecated and the configuration options for Filebeat change often, making it challenging to maintain, especially if you run a Zimbra cluster. 
 
-Please note that most of the config files and script that are in this guide are also available in the Github repository. So if copy- pasting from the guide directly does not work for you, you can get the config files and scripts directly by downloading them via Github.
+Please note that most of the config files and scripts that are in this guide are available in the Github repository. So if copy-pasting directly from this guide  does not work, you should retrieve the config files and scripts by downloading them via Github.
 
 ## Hardware and Software considerations
 
-You will need one additional virtual machine that will serve as the RSyslog logging server and the Elastic Stack server. You can optionally split the two but this is not really needed and not described in this guide. You will have to pick an operating system that is both supported by RSyslog and Elastic Stack. The instructions in this guide are for Ubuntu 20.04 LTS. In addition:
+You will need one additional virtual machine that will serve as the RSyslog logging server and the Elastic Stack server. You can optionally split the two but this is not really needed and not described in this guide. You will have to pick an operating system that is both supported by RSyslog and Elastic Stack. The instructions in this guide are for Ubuntu 20.04 LTS. In detail:
 
 - OS: Ubuntu 20.04 LTS
 - RAM: 4GB
 - CPU: 2
 - Disk: 100GB (SSD preferred)
 
-Please note that the logging tends to consume a large amount of disk space, so even though you can start from a smaller disk you need to arrange for a solution that allows you to grow your disk over time, you can also archive your entire Elastic Stack periodically and revert to an clean snapshot on a yearly basis.
+Please note that the logging tends to consume a large amount of disk space, so even though you can start from a smaller disk you need a solution that allows you to grow your disk over time, you can also archive your entire Elastic Stack periodically and revert to an clean snapshot on a yearly basis.
 
 ## Installing the Centralized Log Server
 
@@ -53,11 +53,11 @@ On the Ubuntu 20 server where we will install the Central Logging server and Ela
       apt update && apt upgrade
       reboot
 
-In this guide we will set-up the RSyslog server to force the use of TLS so that our logs are transmitted over an encrypted connection. In case you are running your servers on an isolated network, you can opt to skip the TLS configuration. Please be advised that in case you first use RSyslog without TLS and then add it later, Zimbra/mailboxd does not understand it. You will need to restart Zimbra to make it resume communications with RSyslog. If you do not restart Zimbra you will loose mailbox logs.
+In this guide we will set-up the RSyslog server to force the use of TLS so that our logs are transmitted over an encrypted connection. In case you are running your servers on an isolated network, you can opt to skip the TLS configuration. Please be advised that in case you first use RSyslog without TLS and then add it later, Zimbra/mailboxd does not recognize it. You will need to restart Zimbra to make it resume communications with RSyslog. If you do not restart Zimbra you will lose mailbox logs.
 
 ### Server/client terminology
 
-In the paragraphs that describe RSyslog installation the term server is used to designate the RSyslog server. In other words the RSyslog server is what receives logs. The term client is used for the server that is sending the logs to RSyslog. So the Zimbra server is an RSyslog client.
+In the paragraphs that describe RSyslog installation the term _server_ is used to designate the RSyslog server. In other words the RSyslog server is what receives logs. The term _client_ is used for the server that is sending the logs to RSyslog. So the Zimbra server is an RSyslog _client_.
 
 ### Install the necessary packages
 
@@ -455,11 +455,11 @@ Depending on your situation you can configure a (host) firewall or change the RS
 
 ## Configuring Zimbra to log to Centralized Log Server
 
-This guide has been tested on Zimbra 8.8.15 and Zimbra 9 on Ubuntu 20.04 LTS. Make sure to install all updates by running:
+This guide has been tested on Zimbra 8.8.15 and Zimbra 9 deployed on Ubuntu 20.04 LTS. Make sure to install all updates by running:
 
       apt update && apt upgrade
 
-Consider rebooting your system if it has been up for longer then 30 days.
+Consider rebooting your system if it has been up for longer than 30 days.
 
 ### Install the necessary packages
 
@@ -481,7 +481,7 @@ In `/etc/rsyslog.conf` append this configuration under Global Directives:
       $ActionSendStreamDriverMode 1 # run driver in TLS-only mode
       $ActionSendStreamDriverAuthMode x509/name
       
-You should use hosts that resolve over DNS. This will allow TLS to work and to forward the logs add to the top of `/etc/rsyslog.d/50-default.conf` the following:
+You should use hosts that resolve over DNS so that TLS works. To start forwarding the logs add to the top of `/etc/rsyslog.d/50-default.conf` the following:
 
       *.*     @@elastic.barrydegraaff.tk
 
@@ -517,7 +517,7 @@ Install `util-linux` package in case you do not have the logger command and on y
 
       echo "Hello World"  | logger -t "barrytest"
 
-And run a `tail -f /var/log/syslog` on both the client and server to see if the log is received at the server. To debug if the server is using TLS you can use:
+Then run `tail -f /var/log/syslog` on both the client and server to see if the log is received at the server. To debug if the server is using TLS you can use:
 
       openssl s_client -connect elastic.barrydegraaff.tk:514
 
@@ -525,7 +525,7 @@ This command should return CONNECTED and show the TLS server certificate. If all
 
       Apr 12 11:23:32 zm-zimbra8 barrytest: Hello World
 
-And probably some logs of Zimbra already show up as well. Finally configure Zimbra to send all logs to RSyslog by issuing:
+Some logs of Zimbra should already show up. Configure Zimbra to send *all* logs to RSyslog by issuing:
 
       su zimbra
       zmprov mcf zimbraLogToSysLog TRUE
@@ -551,7 +551,7 @@ Elasticsearch is the search engine that powers Elastic Stack. It needs Java so i
 
       apt install default-jdk
 
-The proceed by installing:
+Then proceed by installing:
 
       curl -fsSL https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
       echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee -a /etc/apt/sources.list.d/elastic-7.x.list
@@ -607,7 +607,7 @@ Finally start Kibana:
 
       sudo systemctl start kibana
 
-At this point Kibana Dashboard will work, but you still need to add Nginx to add TLS and authentication to the web UI.
+At this point Kibana Dashboard will work, but you still need to install Nginx to add TLS and authentication to the web UI.
 
       apt install nginx apache2-utils
 
@@ -672,11 +672,11 @@ In case you have a firewall open port 443 and then test if you can access Kibana
 
 ### Installing Logstash
 
-Simplified, Logstash is the Elastic Stack component that converts log files into a database. Once the conversion is done text values from the log become available as floating point values or whatever type is needed allowing for visualization. 
+Logstash is the Elastic Stack component that converts log files into a database. Once the conversion is done text values from the log become available as floating point values or whatever type is needed allowing for visualization. 
 
 _These parsed log values are called fields._
 
-Logstash uses a language called `grok` that relies on regular expressions to do the work. For example this CPU statistics log from Zimbra:
+Logstash uses a language called `grok` that relies on regular expressions to do the work. An example of CPU statistics logged from Zimbra:
 
       Apr 13 11:56:30 zm-zimbra8 zimbramon[17392]: 17392:info: zmstat cpu.csv: timestamp, cpu:user, cpu:nice, cpu:sys, cpu:idle, cpu:iowait, cpu:irq, cpu:softirq, cpu0:user, cpu0:nice, cpu0:sys, cpu0:idle, cpu0:iowait, cpu0:irq, cpu0:softirq, cpu1:user, cpu1:nice, cpu1:sys, cpu1:idle, cpu1:iowait, cpu1:irq, cpu1:softirq:: 04/13/2021 11:56:30, 8.6, 0.0, 1.9, 89.5, 0.1, 0.0, 0.0, 9.1, 0.0, 1.8, 89.0, 0.1, 0.0, 0.0, 8.0, 0.0, 2.0, 89.9, 0.0, 0.0, 0.0
 
@@ -864,7 +864,7 @@ In the Web UI you should see the index now at  Management > Stack Management > I
 
 ## Understanding Kibana UI
 
-This chapter chapter is a walk-trough for the Kibana UI. It shows you the places in the Kibana UI where you can find and analyze if the configuration of the previous steps in this guide are working. In the next chapter this guide will show you how to define more fields for logs that Elastic Stack is not parsing yet.
+This chapter is a walk-through for the Kibana UI. It shows the locations in the Kibana UI where you can find and analyze if the configuration of the previous steps in this guide are working. In the next chapter this guide will show you how to define more fields for logs that Elastic Stack is not parsing yet.
 
 ### Stack Management
 
@@ -879,14 +879,14 @@ In Stack Management you can go to Kibana -> Index Patterns -> Filebeat. Since we
 > ![](screenshots/05-index-patterns-open.png)
 *Contents of a Kibana Index.*
 
-You can use the search feature to look for fields that are defined in  `/etc/logstash/conf.d/10-syslog-filter.conf` that was set-up in the Installing Logstash section. 
+You can use the search feature to look for fields that are defined in  `/etc/logstash/conf.d/10-syslog-filter.conf` that were set-up in the Installing Logstash section. 
 
 > ![](screenshots/06-index-patters-search-field.png)
 *Find a specific field in an Index.*
 
 In case you make changes to `grok` filters and add or change fields a Refresh Field List button appears in the UI. You have to click this button to be able to use the new fields. 
 
-You can use the new field for data that is parsed after you click the button. Elastic Stack will not update fields and data retroactively. So even if data for a field is available in historic data, you will not be able to use it for visualizations. The Refresh Field List will not appear if Kibana does not see any changes.
+You will be able to use the new field for data that is parsed after you click the button. Elastic Stack will not update fields and data retroactively. So even if data for a field is available in historic data, you will not be able to use it for visualizations. The Refresh Field List will not appear if Kibana does not see any changes.
 
 > ![](screenshots/07-reload.png)
 *The Refresh Field List button.*
@@ -921,13 +921,13 @@ By using Analyzing->Discover you can see what logs have been processed by Elasti
 
 ## Adding visualizations
 
-In Kibana you can define one or more dashboards to visualize statistics of your Zimbra environment. The easiest way to create visualizations is to first search for the logs that you need and select the fields from those logs that you want to visualize. Then if the search works correctly you can save the search and use it for visualization in a dashboard.
+In Kibana you can define one or more dashboards to visualize statistics of your Zimbra environment. The easiest way to create visualizations is to first search for the logs that you need, then select the fields from those logs that you want to visualize. If the search works correctly you can save the search and use it for visualization in a dashboard.
 
 ### Adding a count visualization (without field)
 
 The count visualization is the simplest form of visualization in Kibana. It counts the number of times a specific log entries matches a search query. Benefits of this visualization is that it just works by searching through the `message` field, which is basically a raw line of log data. So you do not need to parse fields with a `grok` filter.
 
-First navigate to Analysis -> Discover or in older versions Kibana -> Discover. Use the search field to find the logs. A couple of Postfix examples:
+First navigate to Analysis -> Discover or in older versions Kibana -> Discover. Use the search field to find the logs. Here are some Postfix examples:
 
 - `message:"postfix" and "status=bounced"`
 - `message:"postfix" and "status=deferred"`
@@ -959,7 +959,7 @@ Now Kibana will show the saved search on the X axis, but since we did not specif
 > ![](screenshots/20-visual-but-not-configured.png)
 *After selecting the source data, we see a count of all logs, but that is not useful.*
 
-For the Y axis select Aggregation -> Count and for X axis select Aggregation -> Date Histogram and use the @timestamp field. The timestamp is the time and date that was parsed from the log file. There is many detailed settings which this guide will not explain, you can play around with them and hit the Save button once you are ready.
+For the Y axis select Aggregation -> Count and for X axis select Aggregation -> Date Histogram and use the @timestamp field. The timestamp is the time and date that was parsed from the log file. There are many detailed settings which this guide does not explain, you can play around with them and hit the Save button once you are ready.
 
 Here are some screenshots that show the final result:
 
@@ -994,7 +994,7 @@ Don't forget to click Save to save the Dashboard.
 
 ### Adding a number visualization (existing field)
 
-Kibana can also create visualization based on parsed values (fields) from your logs. This way you can create line charts to get insights in for example CPU, RAM and disk usage. This only works if Elastic Stack has parsed the RAW log into fields using a `grok` filter. The filter also tells Kibana what type of number is expected, for example float or integer.
+Kibana can also create visualization based on parsed values (fields) from your logs. This way you can create line charts to get insights into things like CPU, RAM, and disk usage etc. This only works if Elastic Stack has parsed the RAW log into fields using a `grok` filter. The filter also tells Kibana what type of number is expected, for example floating point or integer.
 
 Take a look at the following `grok` filter:
 
@@ -1055,7 +1055,7 @@ To create a visualization go to Analytics -> Visualize Library. Or if you use an
 > ![](screenshots/30-saved-search-as-source.png)
 *Next select your saved search.*
 
-Now Kibana will show the saved search and try and guess how to visualize it. In most cases the settings for the X axis are messed up and you will need to configure it more for it to make sense.
+Now Kibana will show the saved search and try to guess how to visualize it. In most cases the settings for the X axis are messed up and you will need to configure it to make sense.
 
 For the Y axis select Aggregation -> Max and select a field from the saved query. Repeat this for all fields. For X axis select Aggregation -> Date Histogram and use the @timestamp field. The timestamp is the time and date that was parsed from the log file. Hit the Save button once you are ready. 
 
@@ -1074,7 +1074,7 @@ Don't forget to hit Save.
 
 #### Adding the visualization to the dashboard
 
-If you already have a Dashboard you can open it by going to Analysis -> Dashboard. Or in older versions Kibana -> Dashboard. Then click Edit. Then click the Add from library button or the Add menu item in older versions. For more information on how to create a dashboard see the previous chapter. The final result looks like this:
+If you already have a Dashboard you can open it by going to Analysis -> Dashboard. Or in older versions Kibana -> Dashboard. Then click Edit. Then click the Add from library button or the Add menu item in older versions. For more information on how to create a dashboard see the previous chapter. The final result will look something like this:
 
 > ![](screenshots/34-result-line.png)
 *The visualization is now on the Dashboard.*
@@ -1137,7 +1137,7 @@ Now add the following `grok` filter to `/etc/logstash/conf.d/10-syslog-filter.co
   }
 ```
 
-If you read the `grok` syntax you will see it is a form of a regular expression. If a line of log data matches the regular expression, the parsed fields will be stored in Elastic Search. It is useful to add a recognizable string so that you can find the logs easily. In this case by searching for `zimbra-simple-stat`. It will also help Elastic Search with Indexing.
+If you review the `grok` syntax you will see it is a form of a regular expression. If a line of log data matches the regular expression, the parsed fields will be stored in Elastic Search. It is useful to add a recognizable string so that you can find the logs easily. In this case by searching for `zimbra-simple-stat`. It will also help Elastic Search with Indexing.
 
 A field `zimbra_simplestat_cpu` is defined and the log value will be stored as a floating point number if there is a match:
 
@@ -1221,7 +1221,7 @@ It is in the process of being fixed, so you may no longer need to do this. See a
 
 ## Monitoring in Kibana using Heartbeat
 
-Kibana also has a way to do basic monitoring up up-time.  It can do ping requests, check HTTP status codes and open TCP sockets. Additionally it can check the TLS certificate expiration date.
+Kibana also has a way to do basic up-time monitoring. It can send ping requests, check HTTP status codes and open TCP sockets. Additionally it can check the TLS certificate expiration date.
 
 The built-in monitoring is nice for statistics, but it cannot really determine if Zimbra is up and running in all cases. So it is a good idea to either add some custom scripting to be sure to capture downtime or have a different application for monitoring and alerting.
 
