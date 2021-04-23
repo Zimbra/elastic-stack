@@ -534,7 +534,7 @@ Some logs of Zimbra should already show up. Configure Zimbra to send *all* logs 
 ### References
 
 - https://www.thegeekdiary.com/configuring-remote-logging-using-rsyslog-in-centos-rhel/
-- https://github.com/Zimbra/adminguide/blob/develop/monitoring.adoc
+- https://zimbra.github.io/zimbra-9/adminguide.html#monitoring_zcs_servers
 
 For reference relevant Zimbra configuration files, automatically generated:
 
