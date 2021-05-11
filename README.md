@@ -40,8 +40,8 @@ Please note that most of the config files and scripts that are in this guide are
 You will need one additional virtual machine that will serve as the RSyslog logging server and the Elastic Stack server. You can optionally split the two but this is not really needed and not described in this guide. You will have to pick an operating system that is both supported by RSyslog and Elastic Stack. The instructions in this guide are for Ubuntu 20.04 LTS. In detail:
 
 - OS: Ubuntu 20.04 LTS
-- RAM: 4GB
-- CPU: 2
+- RAM: 8GB
+- CPU: 4
 - Disk: 100GB (SSD preferred)
 
 Please note that the logging tends to consume a large amount of disk space, so even though you can start from a smaller disk you need a solution that allows you to grow your disk over time, you can also archive your entire Elastic Stack periodically and revert to an clean snapshot on a yearly basis.
