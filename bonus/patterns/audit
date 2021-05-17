@@ -1,0 +1,10 @@
+ZMQTP \[qtp%{NUMBER:qtp_process}-%{DATA:qtp_thread}:%{DATA:qtp_info}\]
+ZMLOGLEVEL %{WORD:level}
+ZMPROCESS %{DATA:zm_process}
+ZMTHREAD %{NONNEGINT:thread}
+ZMUSERAGENT %{DATA:user_agent}(/| - )%{DATA:user_agent_ver}
+ZMPROGRAM \[%{ZMPROCESS}(-%{ZMTHREAD})?(:%{DATA:program_info})?\]
+ZMCLIENT \[(name=%{DATA:account};)?(aname=%{DATA:delegated_username};)?(mid=%{NUMBER:mid};)?(ip=%{IPORHOST:sourceIP};)?(oip=%{IPORHOST:clientIP}, %{IPORHOST:sourceIP};)?(oproto=%{DATA:oproto};)?(port=%{NUMBER:oport};)?(DeviceID=%{DATA:device};)?(oip=%{IPORHOST:clientIP}(, %{IPORHOST:ProxyIP})?;)?(via=%{DATA:via};)?(cid=%{NUMBER:cid};)?(ua=%{ZMUSERAGENT};)?(soapId=%{DATA:soapId};)?\]
+ZMCOMMAND cmd=%{WORD:command}
+ZMCOMMAND_PARAMS (%{WORD:username_type}=%{DATA:username}(; protocol=%{WORD:protocol})?(; error=%{DATA:error})?(; feature=%{WORD:feature})?(; member=%{DATA:member})?(; status=%{WORD:status})?;)?
+ZMAUDIT %{TIMESTAMP_ISO8601:stimestamp} %{ZMLOGLEVEL}  %{ZMPROGRAM} %{ZMCLIENT} security - %{ZMCOMMAND};( %{ZMCOMMAND_PARAMS})?

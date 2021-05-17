@@ -1283,6 +1283,105 @@ You should now see a new menu item in Kibana under Observability -> Uptime that 
 > ![](screenshots/42-heartbeat.png)
 *Kibana Uptime application.*
 
+
+## Bonus: Grok patterns for Audit and Nginx log
+
+In this bonus chapter your can find `grok` patterns for the authentication log (/opt/zimbra/log/audit.log) and the proxy log (/opt/zimbra/log/nginx.access.log). These can be used in case you want to use `filebeat` to read the logs directly and not use centralized logging based on RSyslog.
+
+### Filebeat configuration
+
+Open `/etc/filebeat/filebeat.yml` using nano and add the configuration under `filebeat.inputs`:
+
+```
+filebeat.inputs:
+
+- type: log
+  enabled: true
+  paths:
+    - /opt/zimbra/log/activity.log
+  fields:
+    log_type: zimbra_kavach
+    fields_under_root: true
+
+- type: log
+  paths:
+    - /opt/zimbra/log/audit.log
+  fields:
+    log_type: zimbra_audit
+    fields_under_root: true
+```
+
+### Logstash configuration
+
+Create following configuration files in `/etc/logstash/conf.d/` and given grok patterns in `/etc/logstash/patterns/`.
+
+Create a file named `18-filter-audit.conf` and copy following content:
+
+```
+filter {
+  if [fields][log_type] == "zimbra_audit" {
+    grok {
+        patterns_dir => ["/etc/logstash/patterns/audit"]
+        match => ["message", "%{ZMAUDIT}"]
+        add_tag => ["audit"]
+        remove_tag => [ "unknown" ]
+    }
+  }
+}
+```
+
+Create a file named `17-nginx-filter.conf` and copy following content:
+
+```
+filter {
+  if [fields][log_type] == "zimbra_proxy" {
+    grok {
+        patterns_dir => ["/etc/logstash/patterns/nginx"]
+        match => ["message", "%{NGINXACCESS}"]
+        add_tag => ["nginx_access"]
+        remove_tag => [ "unknown" ]
+    }
+  }
+}
+```
+
+Create a directory `/etc/logstash/patterns`.
+
+Add a file named `audit` to the patterns directory with the following content:
+
+```
+ZMQTP \[qtp%{NUMBER:qtp_process}-%{DATA:qtp_thread}:%{DATA:qtp_info}\]
+ZMLOGLEVEL %{WORD:level}
+ZMPROCESS %{DATA:zm_process}
+ZMTHREAD %{NONNEGINT:thread}
+ZMUSERAGENT %{DATA:user_agent}(/| - )%{DATA:user_agent_ver}
+ZMPROGRAM \[%{ZMPROCESS}(-%{ZMTHREAD})?(:%{DATA:program_info})?\]
+ZMCLIENT \[(name=%{DATA:account};)?(aname=%{DATA:delegated_username};)?(mid=%{NUMBER:mid};)?(ip=%{IPORHOST:sourceIP};)?(oip=%{IPORHOST:clientIP}, %{IPORHOST:sourceIP};)?(oproto=%{DATA:oproto};)?(port=%{NUMBER:oport};)?(DeviceID=%{DATA:device};)?(oip=%{IPORHOST:clientIP}(, %{IPORHOST:ProxyIP})?;)?(via=%{DATA:via};)?(cid=%{NUMBER:cid};)?(ua=%{ZMUSERAGENT};)?(soapId=%{DATA:soapId};)?\]
+ZMCOMMAND cmd=%{WORD:command}
+ZMCOMMAND_PARAMS (%{WORD:username_type}=%{DATA:username}(; protocol=%{WORD:protocol})?(; error=%{DATA:error})?(; feature=%{WORD:feature})?(; member=%{DATA:member})?(; status=%{WORD:status})?;)?
+ZMAUDIT %{TIMESTAMP_ISO8601:stimestamp} %{ZMLOGLEVEL}  %{ZMPROGRAM} %{ZMCLIENT} security - %{ZMCOMMAND};( %{ZMCOMMAND_PARAMS})?
+```
+
+Add a file named `nginx` to the patterns directory with the following content:
+
+```
+NGINXACCESS %{IPORHOST:clientIP}:%{POSINT:port} - - \[%{HTTPDATE:stimestamp}\]  "%{WORD:method} %{URI:request} HTTP/%{NUMBER:httpversion}" %{NUMBER:http_code} (?:%{NUMBER:bytes:int}|-) (?:"(?:%{URI:referrer}|-)"|%{QS:referrer}) %{QS:agent} "%{IPORHOST:mailboxip}:%{POSINT:mailboxport}" "%{IPORHOST:proxyip}:%{POSINT:proxyport}"
+```
+
+### Visualizations from Audit log
+
+Using the data from the Audit log one can display unique log-ins for all protocols or differentiate between for example IMAP and webmail log-ins. Also one can keep track of failed log-in attempts.
+
+> ![](screenshots/bonus-audit.jpg)
+*Visualizations from Audit log.*
+
+### Visualizations from Nginx log
+
+Using the data from the Nginx log one can display the number of server responses grouped by HTTP response code. This can give you some insight in how well your platform is working. Given that HTTP status 200 indicates an OK response and HTTP 500 means an error has occurred. The visualizations can also be used to show the server load in a given time frame.
+
+> ![](screenshots/bonus-nginx.jpg)
+*Visualizations from Nginx log.*
+
 ## References
 
 - https://logz.io/blog/logstash-grok/

@@ -1,0 +1,1 @@
+NGINXACCESS %{IPORHOST:clientIP}:%{POSINT:port} - - \[%{HTTPDATE:stimestamp}\]  "%{WORD:method} %{URI:request} HTTP/%{NUMBER:httpversion}" %{NUMBER:http_code} (?:%{NUMBER:bytes:int}|-) (?:"(?:%{URI:referrer}|-)"|%{QS:referrer}) %{QS:agent} "%{IPORHOST:mailboxip}:%{POSINT:mailboxport}" "%{IPORHOST:proxyip}:%{POSINT:proxyport}"
