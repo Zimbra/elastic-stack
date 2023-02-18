@@ -9,12 +9,12 @@ This guide describes how to use Elastic Stack with Zimbra by using Centralized L
 
 Both Zimbra and Elastic Stack consist of many components. The below diagram gives an overview of how the software components work together to make visualizations from raw log files. In the most simple form you can install Zimbra in a single server set-up and add another server for all the Elastic Stack components. Of course, if you plan to scale up you may split several of the software components across more virtual machines as required.
 
-> ![](screenshots/zimbra-logstack.dia.png)
+![](screenshots/zimbra-logstack.dia.png)
 *Example of a Zimbra Cluster with Elastic Stack and RSyslog.*
 
 A basic Kibana dashboard for a Zimbra server would look like this:
 
-> ![](screenshots/01-dashboard.png)
+![](screenshots/01-dashboard.png)
 *Example Elastic Stack Dashboard on a Zimbra 9 installation.*
 
 Without Elastic Stack your server only keeps the most recent log files of all the events happening on your Zimbra server. Even though you can configure your system logging to delay the compression and purging of log files, eventually log files tend to become very large and there are several log files for the various components in the system. Finding a specific event across all these logs can be time consuming.
@@ -76,7 +76,7 @@ You will notice the use of the same name for the client and server, you can use 
       certtool --generate-self-signed --load-privkey ca-key.pem --outfile ca.pem
          Generating a self signed certificate...
          Please enter the details of the certificate's distinguished name. Just press enter to ignore a field.
-         Common name: elastic.barrydegraaff.tk
+         Common name: elastic.barrydegraaff.nl
          UID: 
          Organizational unit name: 
          Organization name: 
@@ -118,7 +118,7 @@ You will notice the use of the same name for the client and server, you can use 
             Validity:
                Not Before: Mon Apr 12 08:12:54 UTC 2021
                Not After: Thu Apr 10 08:13:02 UTC 2031
-            Subject: CN=elastic.barrydegraaff.tk
+            Subject: CN=elastic.barrydegraaff.nl
             Subject Public Key Algorithm: RSA
             Algorithm Security Level: High (3072 bits)
                Modulus (bits 3072):
@@ -174,7 +174,7 @@ You will notice the use of the same name for the client and server, you can use 
 
       certtool --generate-request --load-privkey rslclient-key.pem --outfile request.pem
          Generating a PKCS #10 certificate request...
-         Common name: elastic.barrydegraaff.tk
+         Common name: elastic.barrydegraaff.nl
          Organizational unit name: 
          Organization name: 
          Locality name: 
@@ -182,7 +182,7 @@ You will notice the use of the same name for the client and server, you can use 
          Country name (2 chars): 
          Enter the subject's domain component (DC): 
          UID: 
-         Enter a dnsName of the subject of the certificate: elastic.barrydegraaff.tk
+         Enter a dnsName of the subject of the certificate: elastic.barrydegraaff.nl
          Enter an additional dnsName of the subject of the certificate: 
          Enter a URI of the subject of the certificate: 
          Enter the IP address of the subject of the certificate: 
@@ -214,7 +214,7 @@ You will notice the use of the same name for the client and server, you can use 
          Is this a TLS web client certificate? (y/N): y
          Will the certificate be used for IPsec IKE operations? (y/N): 
          Is this a TLS web server certificate? (y/N): y
-         Enter a dnsName of the subject of the certificate: elastic.barrydegraaff.tk
+         Enter a dnsName of the subject of the certificate: elastic.barrydegraaff.nl
          Enter an additional dnsName of the subject of the certificate: 
          Enter a URI of the subject of the certificate: 
          Enter the IP address of the subject of the certificate: 
@@ -231,7 +231,7 @@ You will notice the use of the same name for the client and server, you can use 
             Validity:
                Not Before: Mon Apr 12 08:22:12 UTC 2021
                Not After: Wed Apr 09 08:22:16 UTC 2031
-            Subject: CN=elastic.barrydegraaff.tk
+            Subject: CN=elastic.barrydegraaff.nl
             Subject Public Key Algorithm: RSA
             Algorithm Security Level: Medium (2048 bits)
                Modulus (bits 2048):
@@ -261,7 +261,7 @@ You will notice the use of the same name for the client and server, you can use 
                   TLS WWW Client.
                   TLS WWW Server.
                Subject Alternative Name (not critical):
-                  DNSname: elastic.barrydegraaff.tk
+                  DNSname: elastic.barrydegraaff.nl
                Key Usage (critical):
                   Digital signature.
                   Key encipherment.
@@ -286,7 +286,7 @@ You will notice the use of the same name for the client and server, you can use 
 
       certtool --generate-request --load-privkey rslserver-key.pem --outfile request.pem
          Generating a PKCS #10 certificate request...
-         Common name: elastic.barrydegraaff.tk
+         Common name: elastic.barrydegraaff.nl
          Organizational unit name: 
          Organization name: 
          Locality name: 
@@ -294,7 +294,7 @@ You will notice the use of the same name for the client and server, you can use 
          Country name (2 chars): 
          Enter the subject's domain component (DC): 
          UID: 
-         Enter a dnsName of the subject of the certificate: elastic.barrydegraaff.tk
+         Enter a dnsName of the subject of the certificate: elastic.barrydegraaff.nl
          Enter an additional dnsName of the subject of the certificate: 
          Enter a URI of the subject of the certificate: 
          Enter the IP address of the subject of the certificate: 
@@ -326,7 +326,7 @@ You will notice the use of the same name for the client and server, you can use 
          Is this a TLS web client certificate? (y/N): y
          Will the certificate be used for IPsec IKE operations? (y/N): 
          Is this a TLS web server certificate? (y/N): y
-         Enter a dnsName of the subject of the certificate: elastic.barrydegraaff.tk
+         Enter a dnsName of the subject of the certificate: elastic.barrydegraaff.nl
          Enter an additional dnsName of the subject of the certificate: 
          Enter a URI of the subject of the certificate: 
          Enter the IP address of the subject of the certificate: 
@@ -343,7 +343,7 @@ You will notice the use of the same name for the client and server, you can use 
             Validity:
                Not Before: Mon Apr 12 08:27:11 UTC 2021
                Not After: Wed Apr 09 08:27:19 UTC 2031
-            Subject: CN=elastic.barrydegraaff.tk
+            Subject: CN=elastic.barrydegraaff.nl
             Subject Public Key Algorithm: RSA
             Algorithm Security Level: Medium (2048 bits)
                Modulus (bits 2048):
@@ -373,7 +373,7 @@ You will notice the use of the same name for the client and server, you can use 
                   TLS WWW Client.
                   TLS WWW Server.
                Subject Alternative Name (not critical):
-                  DNSname: elastic.barrydegraaff.tk
+                  DNSname: elastic.barrydegraaff.nl
                Key Usage (critical):
                   Digital signature.
                   Key encipherment.
@@ -392,8 +392,9 @@ You will notice the use of the same name for the client and server, you can use 
          
          Signing certificate...
 
-      chown syslog:syslog /etc/rsyslog-certs -R
-
+```
+chown syslog:syslog /etc/rsyslog-certs -R
+```
 
 Finally it should look like this:
 
@@ -427,7 +428,7 @@ Open `/etc/rsyslog.conf` and append under Global Directives:
       $InputTCPServerStreamDriverMode 1 # run driver in TLS-only mode
       
       $ActionSendStreamDriverAuthMode x509/name
-      $ActionSendStreamDriverPermittedPeer elastic.barrydegraaff.tk
+      $ActionSendStreamDriverPermittedPeer elastic.barrydegraaff.nl
       $ActionSendStreamDriverMode 1 # run driver in TLS-only mode
       
       $InputTCPServerRun 514
@@ -477,17 +478,17 @@ In `/etc/rsyslog.conf` append this configuration under Global Directives:
       $DefaultNetstreamDriverCertFile /etc/rsyslog-certs/rslclient-cert.pem
       $DefaultNetstreamDriverKeyFile /etc/rsyslog-certs/rslclient-key.pem
       
-      $ActionSendStreamDriverPermittedPeer elastic.barrydegraaff.tk
+      $ActionSendStreamDriverPermittedPeer elastic.barrydegraaff.nl
       $ActionSendStreamDriverMode 1 # run driver in TLS-only mode
       $ActionSendStreamDriverAuthMode x509/name
       
 You should use hosts that resolve over DNS so that TLS works. To start forwarding the logs add to the top of `/etc/rsyslog.d/50-default.conf` the following:
 
-      *.*     @@elastic.barrydegraaff.tk
+      *.*     @@elastic.barrydegraaff.nl
 
 If you do not have a working DNS you can add a local hosts entry to `/etc/hosts`, make sure to use your own IP address and domain name:
 
-      192.168.1.101 elastic.barrydegraaff.tk
+      192.168.1.101 elastic.barrydegraaff.nl
 
 Create and copy the certificates for TLS to the client:
 
@@ -519,7 +520,7 @@ Install `util-linux` package in case you do not have the logger command and on y
 
 Then run `tail -f /var/log/syslog` on both the client and server to see if the log is received at the server. To debug if the server is using TLS you can use:
 
-      openssl s_client -connect elastic.barrydegraaff.tk:514
+      openssl s_client -connect elastic.barrydegraaff.nl:514
 
 This command should return CONNECTED and show the TLS server certificate. If all goes well you should see this log on the RSyslog server:
 
@@ -574,7 +575,7 @@ Test if it works:
 
       curl -X GET "localhost:9200"
          {
-           "name" : "elastic.barrydegraaff.tk",
+           "name" : "elastic.barrydegraaff.nl",
            "cluster_name" : "elasticsearch",
            "cluster_uuid" : "PkLqrCPVThOplMOfvdVJRA",
            "version" : {
@@ -627,7 +628,7 @@ upstream backend {
 # HTTPS Server
 server {
     listen 443;
-    server_name elastic.barrydegraaff.tk;
+    server_name elastic.barrydegraaff.nl;
 
     # You can increase the limit if your need to.
     client_max_body_size 200M;
@@ -635,8 +636,8 @@ server {
     error_log /var/log/nginx/elastic.access.log;
 
     ssl on;
-    ssl_certificate /etc/letsencrypt/live/barrydegraaff.tk/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/barrydegraaff.tk/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/barrydegraaff.nl/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/barrydegraaff.nl/privkey.pem;
     ssl_protocols TLSv1 TLSv1.1 TLSv1.2; # don’t use SSLv3 ref: POODLE
 
     auth_basic "Restricted Access";
@@ -665,9 +666,9 @@ server {
 
       sudo systemctl restart nginx
 
-In case you have a firewall open port 443 and then test if you can access Kibana from https://elastic.barrydegraaff.tk/status
+In case you have a firewall open port 443 and then test if you can access Kibana from https://elastic.barrydegraaff.nl/status
 
-> ![](screenshots/02-status.png)
+![](screenshots/02-status.png)
 *Kibana status screen.*
 
 ### Installing Logstash
@@ -852,9 +853,9 @@ Finally enable Filebeat
       sudo systemctl enable filebeat
    
 In the Web UI you should see the index now at  Management > Stack Management > Index Management. In case the UI has changed, the URL:
- https://elastic.barrydegraaff.tk/app/management/data/index_management/indices
+ https://elastic.barrydegraaff.nl/app/management/data/index_management/indices
 
-> ![](screenshots/03-index.png)
+![](screenshots/03-index.png)
 *Filebeat indices after initial setup.*
 
 ### References
@@ -870,51 +871,51 @@ This chapter is a walk-through for the Kibana UI. It shows the locations in the 
 
 In Stack Management you can go to Kibana -> Index Patterns -> Filebeat. Since we use RSyslog to gather all our logs to a single server, we only have this one Index Pattern.
 
-> ![](screenshots/04-stack-management.png)
+![](screenshots/04-stack-management.png)
 *Stack Management.*
 
-> ![](screenshots/05-index-patterns.png)
+![](screenshots/05-index-patterns.png)
 *Kibana Index Patterns.*
 
-> ![](screenshots/05-index-patterns-open.png)
+![](screenshots/05-index-patterns-open.png)
 *Contents of a Kibana Index.*
 
 You can use the search feature to look for fields that are defined in  `/etc/logstash/conf.d/10-syslog-filter.conf` that were set-up in the Installing Logstash section. 
 
-> ![](screenshots/06-index-patters-search-field.png)
+![](screenshots/06-index-patters-search-field.png)
 *Find a specific field in an Index.*
 
 In case you make changes to `grok` filters and add or change fields a Refresh Field List button appears in the UI. You have to click this button to be able to use the new fields. 
 
 You will be able to use the new field for data that is parsed after you click the button. Elastic Stack will not update fields and data retroactively. So even if data for a field is available in historic data, you will not be able to use it for visualizations. The Refresh Field List will not appear if Kibana does not see any changes.
 
-> ![](screenshots/07-reload.png)
+![](screenshots/07-reload.png)
 *The Refresh Field List button.*
 
 ### Observability
 
 In Observability->Logs you can see RAW log files as they come into Elastic Stack using the Stream Live option. If some log is missing here, it means it did not pass from RSyslog to Filebeat and you have to go back to the command line and look at the Installing Elastic Stack chapter to fix it. 
 
-> ![](screenshots/10-observability-logs.png)
+![](screenshots/10-observability-logs.png)
 *RAW logs are in Observability/Logs.*
 
-> ![](screenshots/10-observability-logs-stream.png)
+![](screenshots/10-observability-logs-stream.png)
 *Analyze RAW logs as they are received in Observability/Logs.*
 
 ### Analyzing
 
 By using Analyzing->Discover you can see what logs have been processed by Elastic Stack and if the conversion to fields was successful. You can also use the Search feature to do ad-hoc analyzing of logs. Click View Details to find fields you have added in the `grok` filter configuration file. In our case these fields have names that start with `zimbra_`.
 
-> ![](screenshots/11-analytics-discover.png)
+![](screenshots/11-analytics-discover.png)
 *Dig into the parsed logs in Analytics/Discover.*
 
-> ![](screenshots/12-analytics-discover-search.png)
+![](screenshots/12-analytics-discover-search.png)
 *Search for a log.*
 
-> ![](screenshots/13-analytics-discover-log-detail.png)
+![](screenshots/13-analytics-discover-log-detail.png)
 *Check the details to see the parsed fields.*
 
-> ![](screenshots/14-analytics-discover-log-detail-zimbra.png)
+![](screenshots/14-analytics-discover-log-detail-zimbra.png)
 *Find Zimbra specific fields available for visualization.*
 
 
@@ -933,7 +934,7 @@ First navigate to Analysis -> Discover or in older versions Kibana -> Discover. 
 - `message:"postfix" and "status=deferred"`
 - `message:"postfix" and "status=sent"`
 
-> ![](screenshots/15-count-visualization.png)
+![](screenshots/15-count-visualization.png)
 *Searching for Postfix logs.*
 
 Once you are satisfied with your query, hit the Save button.
@@ -942,34 +943,34 @@ Once you are satisfied with your query, hit the Save button.
 
 To create a visualization go to Analytics -> Visualize Library. Or if you use an older version go to Kibana -> Visualize. 
 
-> ![](screenshots/16-create-visualization.png)
+![](screenshots/16-create-visualization.png)
 *Click Create Visualization.*
 
-> ![](screenshots/17-aggregation-based.png)
+![](screenshots/17-aggregation-based.png)
 *Select Aggregation based.*
 
-> ![](screenshots/18-area.png)
+![](screenshots/18-area.png)
 *Select Area.*
 
-> ![](screenshots/19-saved-search-as-source.png)
+![](screenshots/19-saved-search-as-source.png)
 *Next select your saved search.*
 
 Now Kibana will show the saved search on the X axis, but since we did not specify anything else, it is just one big bar that counts all the logs, not really useful.
 
-> ![](screenshots/20-visual-but-not-configured.png)
+![](screenshots/20-visual-but-not-configured.png)
 *After selecting the source data, we see a count of all logs, but that is not useful.*
 
 For the Y axis select Aggregation -> Count and for X axis select Aggregation -> Date Histogram and use the @timestamp field. The timestamp is the time and date that was parsed from the log file. There are many detailed settings which this guide does not explain, you can play around with them and hit the Save button once you are ready.
 
 Here are some screenshots that show the final result:
 
-> ![](screenshots/21-visualization-tab1.png)
+![](screenshots/21-visualization-tab1.png)
 *X and Y axis configured.*
 
-> ![](screenshots/21-visualization-tab2.png)
+![](screenshots/21-visualization-tab2.png)
 *Metrics and Axis allow configuring some details with regards to chart type and mode etc.*
 
-> ![](screenshots/21-visualization-tab3.png)
+![](screenshots/21-visualization-tab3.png)
 *The Panel tab allows for tweaking the way the visualization is displayed in a Dashboard.*
 
 Don't forget to hit Save.
@@ -978,15 +979,15 @@ Don't forget to hit Save.
 
 Create a new Dashboard by going to Analysis -> Dashboard and New Dashboard. In older versions Kibana -> Dashboard and New Dashboard. 
 
-> ![](screenshots/22-new-dashboard.png)
+![](screenshots/22-new-dashboard.png)
 *Click Add from Library to add the Visualization.*
 
 _or in older versions:_
 
-> ![](screenshots/23-new-dashboard.png)
+![](screenshots/23-new-dashboard.png)
 *Click Add an Existing object and select the visualization. .*
 
-> ![](screenshots/24-result-in-dashboard.png)
+![](screenshots/24-result-in-dashboard.png)
 *The visualization is now on the Dashboard.*
 
 Don't forget to click Save to save the Dashboard.
@@ -1024,17 +1025,17 @@ First navigate to Analysis -> Discover or in older versions Kibana -> Discover. 
 
 - `"zmstat vm.csv"`
 
-> ![](screenshots/25-discover.png)
+![](screenshots/25-discover.png)
 *Searching for vmstat logs.*
 
 Next select the fields needed for visualization. Expand the log details and find the field you want. Then select it from the list on the left.
 
-> ![](screenshots/27-add-field-column.png)
+![](screenshots/27-add-field-column.png)
 *Select the fields for visualization.*
 
 Once the fields are selected, you will see them displayed as columns on the screen:
 
-> ![](screenshots/28-selected.png)
+![](screenshots/28-selected.png)
 *Columns selected for visualization.*
 
 Once you are satisfied with your query, hit the Save button.
@@ -1043,16 +1044,16 @@ Once you are satisfied with your query, hit the Save button.
 
 To create a visualization go to Analytics -> Visualize Library. Or if you use an older version go to Kibana -> Visualize. 
 
-> ![](screenshots/16-create-visualization.png)
+![](screenshots/16-create-visualization.png)
 *Click Create Visualization.*
 
-> ![](screenshots/17-aggregation-based.png)
+![](screenshots/17-aggregation-based.png)
 *Select Aggregation based.*
 
-> ![](screenshots/29-line.png)
+![](screenshots/29-line.png)
 *Select Line.*
 
-> ![](screenshots/30-saved-search-as-source.png)
+![](screenshots/30-saved-search-as-source.png)
 *Next select your saved search.*
 
 Now Kibana will show the saved search and try to guess how to visualize it. In most cases the settings for the X axis are messed up and you will need to configure it to make sense.
@@ -1061,13 +1062,13 @@ For the Y axis select Aggregation -> Max and select a field from the saved query
 
 Here are some screenshots that show the final result:
 
-> ![](screenshots/31-y.png)
+![](screenshots/31-y.png)
 *Multiple Y axis configured.*
 
-> ![](screenshots/32-x.png)
+![](screenshots/32-x.png)
 *X axis configured.*
 
-> ![](screenshots/33-timeframe.png)
+![](screenshots/33-timeframe.png)
 *Sometimes expanding the time range makes it easier to get a good visualization.*
 
 Don't forget to hit Save.
@@ -1076,7 +1077,7 @@ Don't forget to hit Save.
 
 If you already have a Dashboard you can open it by going to Analysis -> Dashboard. Or in older versions Kibana -> Dashboard. Then click Edit. Then click the Add from library button or the Add menu item in older versions. For more information on how to create a dashboard see the previous chapter. The final result will look something like this:
 
-> ![](screenshots/34-result-line.png)
+![](screenshots/34-result-line.png)
 *The visualization is now on the Dashboard.*
 
 Don't forget to click Save to save the Dashboard.
@@ -1092,7 +1093,7 @@ Imagine you have a custom process or you want to track something in Elastic Stac
 
 In this example you learn how to create Gauge visualizations to show the percentage of a BASH script output.
 
-> ![](screenshots/35-gauges.png)
+![](screenshots/35-gauges.png)
 *Gauges are a great way to simplify a statistic.*
 
 #### Create a BASH script
@@ -1151,19 +1152,19 @@ Since we added a `grok` filter you may need to hit the Refresh Field List button
 
 You can use the new field for data that is parsed after you click the button. Elastic Stack will not update fields and data retroactively. So even if data for a field is available in historic data, you will not be able to use it for visualizations. The Refresh Field List will not appear if Kibana does not see any changes.
 
-> ![](screenshots/07-reload.png)
+![](screenshots/07-reload.png)
 *The Refresh Field List button.*
 
 Now navigate to Analysis -> Discover or in older versions Kibana -> Discover. Use the search field to find the logs by using:
 
 - `"zimbra-simple-stat"`
 
-> ![](screenshots/36-simplestat-discover.png)
+![](screenshots/36-simplestat-discover.png)
 *Searching for zimbra-simple-stat logs.*
 
 Next verify that the field `zimbra_simplestat_cpu` is parsed in the log by expanding the details. Then select the field.
 
-> ![](screenshots/37-select-verify-field.png)
+![](screenshots/37-select-verify-field.png)
 *Selecting the `zimbra_simplestat_cpu` field.*
 
 Once you are satisfied with your query, hit the Save button.
@@ -1172,29 +1173,29 @@ Once you are satisfied with your query, hit the Save button.
 
 When writing the `grok` filter you can use the `grok` debugger in the Kibana UI. This way you can make sure your regular expression matches the log, before adding it to Elastic Stack.
 
-> ![](screenshots/37b-grok-debugger.png)
+![](screenshots/37b-grok-debugger.png)
 *The `grok` debugger tool*
 
 #### Create the percentage visualization
 
 To create a visualization go to Analytics -> Visualize Library. Or if you use an older version go to Kibana -> Visualize. 
 
-> ![](screenshots/16-create-visualization.png)
+![](screenshots/16-create-visualization.png)
 *Click Create Visualization.*
 
-> ![](screenshots/17-aggregation-based.png)
+![](screenshots/17-aggregation-based.png)
 *Select Aggregation based.*
 
-> ![](screenshots/38-gauge-visualization.png)
+![](screenshots/38-gauge-visualization.png)
 *Select Gauge.*
 
-> ![](screenshots/39-select-cpu-saved-search.png)
+![](screenshots/39-select-cpu-saved-search.png)
 *Next select your saved search.*
 
 Now Kibana will show the count of the saved search or some other guesswork that does not make sense. Maybe one day Kibana will guess it right or actually make a wizard that is complete, in the mean time you have to configure the visualization to make useful. On the Metric select Max and select the field `zimbra_simplestat_cpu
 `. You have to click the Update button to see the changes. Additionally in many cases you will want to expand or play with the time window to make sure the visualization works correctly.
 
-> ![](screenshots/40-update-button.png)
+![](screenshots/40-update-button.png)
 *After configuring the Gauge click the update button.*
 
 Don't forget to hit Save.
@@ -1208,7 +1209,7 @@ If you already have a Dashboard you can open it by going to Analysis -> Dashboar
 There is a bug in Kibana that prevents the setting of the amount of decimal places to display in Gauges. So your CPU statistic can show something funny like 56.32333%. To make it show only 56% you have to change the default pattern for percent in Stack Management -> Advanced Settings. The default setting is `0,0.[000]%` and needs to be changed to `0%`.
 
 
-> ![](screenshots/41-percentage-format.png)
+![](screenshots/41-percentage-format.png)
 *Configuring the default format for percentages.*
 
 It is in the process of being fixed, so you may no longer need to do this. See also:
@@ -1280,7 +1281,7 @@ Finally run:
 
 You should now see a new menu item in Kibana under Observability -> Uptime that looks like this:
 
-> ![](screenshots/42-heartbeat.png)
+![](screenshots/42-heartbeat.png)
 *Kibana Uptime application.*
 
 
@@ -1372,14 +1373,14 @@ NGINXACCESS %{IPORHOST:clientIP}:%{POSINT:port} - - \[%{HTTPDATE:stimestamp}\]  
 
 Using the data from the Audit log one can display unique log-ins for all protocols or differentiate between for example IMAP and webmail log-ins. Also one can keep track of failed log-in attempts.
 
-> ![](screenshots/bonus-audit.jpg)
+![](screenshots/bonus-audit.jpg)
 *Visualizations from Audit log.*
 
 ### Visualizations from Nginx log
 
 Using the data from the Nginx log one can display the number of server responses grouped by HTTP response code. This can give you some insight in how well your platform is working. Given that HTTP status 200 indicates an OK response and HTTP 500 means an error has occurred. The visualizations can also be used to show the server load in a given time frame.
 
-> ![](screenshots/bonus-nginx.jpg)
+![](screenshots/bonus-nginx.jpg)
 *Visualizations from Nginx log.*
 
 ## References
@@ -1391,7 +1392,7 @@ Using the data from the Nginx log one can display the number of server responses
 
 ### BSD 3-Clause License
 
-Copyright (c) 2020, Synacor, Inc.
+Copyright (c) 2023, Synacor, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
