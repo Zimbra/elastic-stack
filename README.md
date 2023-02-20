@@ -733,28 +733,9 @@ In case you have a firewall open port 443 and then test if you can access Kibana
 
 ### Installing Logstash
 
-Logstash is the Elastic Stack component that converts log files into a database. Once the conversion is done text values from the log become available as floating point values or whatever type is needed allowing for visualization. 
+Logstash is the Elastic Stack component that converts log files into a database. Once the conversion is done text values from the log become available as floating point values or whatever type is needed allowing for visualization. _These parsed log values are called fields._
 
-_These parsed log values are called fields._
-
-Logstash uses a language called `grok` that relies on regular expressions to do the work. An example of CPU statistics logged from Zimbra:
-
-      Apr 13 11:56:30 zm-zimbra8 zimbramon[17392]: 17392:info: zmstat cpu.csv: timestamp, cpu:user, cpu:nice, cpu:sys, cpu:idle, cpu:iowait, cpu:irq, cpu:softirq, cpu0:user, cpu0:nice, cpu0:sys, cpu0:idle, cpu0:iowait, cpu0:irq, cpu0:softirq, cpu1:user, cpu1:nice, cpu1:sys, cpu1:idle, cpu1:iowait, cpu1:irq, cpu1:softirq:: 04/13/2021 11:56:30, 8.6, 0.0, 1.9, 89.5, 0.1, 0.0, 0.0, 9.1, 0.0, 1.8, 89.0, 0.1, 0.0, 0.0, 8.0, 0.0, 2.0, 89.9, 0.0, 0.0, 0.0
-
-Can be parsed by Logstash with the following configuration:
-
-        #parse zmstat cpu.csv
-        grok {
-          match => { "message" => ["%{SYSLOGTIMESTAMP:[system][syslog][timestamp]} %{SYSLOGHOST:[system][auth][hostname]} %{DATA:[system][syslog][program]}(?:\[%{POSINT:[system][syslog][pid]}\]): %{NUMBER:statpid}:info: zmstat cpu.csv:.*:: %{DATA:statdate} %{DATA:stattime}, %{NUMBER:value01:float}, %{NUMBER:value02:float}, %{NUMBER:value03:float}, %{NUMBER:value04:float}, %{NUMBER:value05:float}, %{NUMBER:value06:float}, %{NUMBER:value07:float}, %{NUMBER:value08:float}, %{NUMBER:value09:float}, %{NUMBER:value10:float}"] }
-          pattern_definitions => { "GREEDYMULTILINE" => "(.|\n)*" }
-          remove_tag => [ "_grokparsefailure" ]
-          add_tag => ["zmstats"]
-        }
-        date {
-          match => [ "[system][syslog][timestamp]", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss" ]
-        }
-
-Writing these filters is the hardest and most time consuming part of setting up Elastic Stack. See the dedicated how-to further in the guide to write your own.
+To install Logstash:
 
       sudo apt install logstash
 
@@ -768,87 +749,6 @@ input {
     port => 5044
   }
 }
-```
-
-`/etc/logstash/conf.d/10-syslog-filter.conf`
-
-```
-filter {
-  if [fileset][module] == "system" {
-    if [fileset][name] == "auth" {
-      grok {
-        match => { "message" => ["%{SYSLOGTIMESTAMP:[system][auth][timestamp]} %{SYSLOGHOST:[system][auth][hostname]} sshd(?:\[%{POSINT:[system][auth][pid]}\])?: %{DATA:[system][auth][ssh][event]} %{DATA:[system][auth][ssh][method]} for (invalid user )?%{DATA:[system][auth][user]} from %{IPORHOST:[system][auth][ssh][ip]} port %{NUMBER:[system][auth][ssh][port]} ssh2(: %{GREEDYDATA:[system][auth][ssh][signature]})?",
-                  "%{SYSLOGTIMESTAMP:[system][auth][timestamp]} %{SYSLOGHOST:[system][auth][hostname]} sshd(?:\[%{POSINT:[system][auth][pid]}\])?: %{DATA:[system][auth][ssh][event]} user %{DATA:[system][auth][user]} from %{IPORHOST:[system][auth][ssh][ip]}",
-                  "%{SYSLOGTIMESTAMP:[system][auth][timestamp]} %{SYSLOGHOST:[system][auth][hostname]} sshd(?:\[%{POSINT:[system][auth][pid]}\])?: Did not receive identification string from %{IPORHOST:[system][auth][ssh][dropped_ip]}",
-                  "%{SYSLOGTIMESTAMP:[system][auth][timestamp]} %{SYSLOGHOST:[system][auth][hostname]} sudo(?:\[%{POSINT:[system][auth][pid]}\])?: \s*%{DATA:[system][auth][user]} :( %{DATA:[system][auth][sudo][error]} ;)? TTY=%{DATA:[system][auth][sudo][tty]} ; PWD=%{DATA:[system][auth][sudo][pwd]} ; USER=%{DATA:[system][auth][sudo][user]} ; COMMAND=%{GREEDYDATA:[system][auth][sudo][command]}",
-                  "%{SYSLOGTIMESTAMP:[system][auth][timestamp]} %{SYSLOGHOST:[system][auth][hostname]} groupadd(?:\[%{POSINT:[system][auth][pid]}\])?: new group: name=%{DATA:system.auth.groupadd.name}, GID=%{NUMBER:system.auth.groupadd.gid}",
-                  "%{SYSLOGTIMESTAMP:[system][auth][timestamp]} %{SYSLOGHOST:[system][auth][hostname]} useradd(?:\[%{POSINT:[system][auth][pid]}\])?: new user: name=%{DATA:[system][auth][user][add][name]}, UID=%{NUMBER:[system][auth][user][add][uid]}, GID=%{NUMBER:[system][auth][user][add][gid]}, home=%{DATA:[system][auth][user][add][home]}, shell=%{DATA:[system][auth][user][add][shell]}$",
-                  "%{SYSLOGTIMESTAMP:[system][auth][timestamp]} %{SYSLOGHOST:[system][auth][hostname]} %{DATA:[system][auth][program]}(?:\[%{POSINT:[system][auth][pid]}\])?: %{GREEDYMULTILINE:[system][auth][message]}"] }
-        pattern_definitions => {
-          "GREEDYMULTILINE"=> "(.|\n)*"
-        }
-        remove_tag => [ "_grokparsefailure" ]
-        remove_field => "message"
-      }
-      date {
-        match => [ "[system][auth][timestamp]", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss" ]
-      }
-      geoip {
-        source => "[system][auth][ssh][ip]"
-        target => "[system][auth][ssh][geoip]"
-      }
-    }
-    else if [fileset][name] == "syslog" {
-      grok {
-        match => { "message" => ["%{SYSLOGTIMESTAMP:[system][syslog][timestamp]} %{SYSLOGHOST:[system][syslog][hostname]} %{DATA:[system][syslog][program]}(?:\[%{POSINT:[system][syslog][pid]}\])?: %{GREEDYMULTILINE:[system][syslog][message]}"] }
-        pattern_definitions => { "GREEDYMULTILINE" => "(.|\n)*" }
-        remove_tag => [ "_grokparsefailure" ]
-        remove_field => "message"
-      }
-      date {
-        match => [ "[system][syslog][timestamp]", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss" ]
-      }
-    }
-  }
-
-
-  #parse zmstat cpu.csv
-  grok {
-    match => { "message" => ["%{SYSLOGTIMESTAMP:[system][syslog][timestamp]} %{SYSLOGHOST:[system][auth][hostname]} %{DATA:[system][syslog][program]}(?:\[%{POSINT:[system][syslog][pid]}\]): %{NUMBER:statpid}:info: zmstat cpu.csv:.*:: %{DATA:statdate} %{DATA:stattime}, %{NUMBER:value01:float}, %{NUMBER:value02:float}, %{NUMBER:value03:float}, %{NUMBER:value04:float}, %{NUMBER:value05:float}, %{NUMBER:value06:float}, %{NUMBER:value07:float}, %{NUMBER:value08:float}, %{NUMBER:value09:float}, %{NUMBER:value10:float}"] }
-    pattern_definitions => { "GREEDYMULTILINE" => "(.|\n)*" }
-    remove_tag => [ "_grokparsefailure" ]
-    add_tag => ["zmstats"]
-  }
-  date {
-    match => [ "[system][syslog][timestamp]", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss" ]
-  }
-
-  #parse zmstat vm.csv / memory see: https://access.redhat.com/solutions/1160343 and https://wiki.zimbra.com/wiki/Zmstats
-  grok {
-    match => { "message" => ["%{SYSLOGTIMESTAMP:[system][syslog][timestamp]} %{SYSLOGHOST:[system][auth][hostname]} %{DATA:[system][syslog][program]}(?:\[%{POSINT:[system][syslog][pid]}\]): %{NUMBER:statpid}:info: zmstat vm.csv:.*:: %{DATA:statdate} %{DATA:stattime}, %{NUMBER:zimbra_stats_vm_r:float}, %{NUMBER:zimbra_stats_vm_b:float}, %{NUMBER:zimbra_stats_vm_swpd:float}, %{NUMBER:zimbra_stats_vm_free:float}, %{NUMBER:zimbra_stats_vm_buff:float}, %{NUMBER:zimbra_stats_vm_cache:float}, %{NUMBER:zimbra_stats_vm_si:float}, %{NUMBER:zimbra_stats_vm_so:float}, %{NUMBER:zimbra_stats_vm_bi:float}, %{NUMBER:zimbra_stats_vm_bo:float}, %{NUMBER:zimbra_stats_vm_in:float}, %{NUMBER:zimbra_stats_vm_cs:float}, %{NUMBER:zimbra_stats_vm_us:float}, %{NUMBER:zimbra_stats_vm_sy:float}, %{NUMBER:zimbra_stats_vm_id:float}, %{NUMBER:zimbra_stats_vm_wa:float}, %{NUMBER:zimbra_stats_vm_st:float}, %{NUMBER:zimbra_stats_vm_MemTotal:float}"] }
-    pattern_definitions => { "GREEDYMULTILINE" => "(.|\n)*" }
-    remove_tag => [ "_grokparsefailure" ]
-    add_tag => ["zmstats"]
-  }
-  date {
-    match => [ "[system][syslog][timestamp]", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss" ]
-  }
-
-  #parse zimbra-simple-stat from /usr/local/sbin/zimbra-simple-stat.sh
-  # echo "CPU `LC_ALL=C top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1}'`% RAM `free -m | awk '/Mem:/ { printf("%3.1f%%", $3/$2*100) }'` HDD `df -h / | awk '/\// {print $(NF-1)}'`"  | logger -t "zimbra-simple-stat"
-  grok {
-    match => { "message" => ["%{SYSLOGTIMESTAMP:[system][syslog][timestamp]} %{SYSLOGHOST:[system][auth][hostname]} %{DATA:[system][syslog][program]}zimbra-simple-stat: CPU %{NUMBER:zimbra_simplestat_cpu:float}% RAM %{NUMBER:zimbra_simplestat_ram:float}% HDD %{NUMBER:zimbra_simplestat_hdd:float}%"] }
-    pattern_definitions => { "GREEDYMULTILINE" => "(.|\n)*" }
-    remove_tag => [ "_grokparsefailure" ]
-    add_tag => ["zimbra-simple-stat"]
-  }
-  date {
-    match => [ "[system][syslog][timestamp]", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss" ]
-  }
-
-
-}
-
 ```
 
 `/etc/logstash/conf.d/30-elasticsearch-output.conf`
@@ -944,12 +844,6 @@ Finally enable Filebeat
       sudo systemctl start filebeat
       sudo systemctl enable filebeat
    
-In the Web UI you should see the index now at  Management > Stack Management > Index Management. In case the UI has changed, the URL:
- https://elastic.barrydegraaff.nl/app/management/data/index_management/indices
-
-![](screenshots/03-index.png)
-*Filebeat indices after initial setup.*
-
 You should be able to see some logs in Observability > Logs > Stream. In case the UI has changed, the URL:
 https://elastic.barrydegraaff.nl/app/logs/stream
 
@@ -969,44 +863,69 @@ Bugs:
 - https://www.reddit.com/r/elasticsearch/comments/w8g64e/problems_with_enabling_filesets_in_filebeat/
 - https://github.com/elastic/beats/issues/30916
 
+## Ingest Pipelines
+
+In an older version of this guide the adding of fields was done by configuring [/etc/logstash/conf.d/10-syslog-filter.conf](https://raw.githubusercontent.com/Zimbra/elastic-stack/main/rsyslog-elastic/logstash/conf.d/10-syslog-filter.conf). This no longer seems to work in Elasticsearch 8.x and can now be done via the UI.
+
+Elastic Stack uses a language called `grok` that relies on regular expressions to convert raw logs into fields. An example of CPU statistics logged from Zimbra:
+
+      Apr 13 11:56:30 zm-zimbra8 zimbramon[17392]: 17392:info: zmstat cpu.csv: timestamp, cpu:user, cpu:nice, cpu:sys, cpu:idle, cpu:iowait, cpu:irq, cpu:softirq, cpu0:user, cpu0:nice, cpu0:sys, cpu0:idle, cpu0:iowait, cpu0:irq, cpu0:softirq, cpu1:user, cpu1:nice, cpu1:sys, cpu1:idle, cpu1:iowait, cpu1:irq, cpu1:softirq:: 04/13/2021 11:56:30, 8.6, 0.0, 1.9, 89.5, 0.1, 0.0, 0.0, 9.1, 0.0, 1.8, 89.0, 0.1, 0.0, 0.0, 8.0, 0.0, 2.0, 89.9, 0.0, 0.0, 0.0
+
+This can be parsed with `grok` as follows:
+
+```
+zmstat cpu.csv:.*:: %{DATA:statdate} %{DATA:stattime}, %{NUMBER:cpu-user:float}, %{NUMBER:cpu-nice:float}, %{NUMBER:cpu-sys:float}, %{NUMBER:cpu-idle:float}, %{NUMBER:cpu-iowait:float}, %{NUMBER:cpu-irq:float}, %{NUMBER:cpu-soft-irq:float}
+```
+
+To actually use this `grok` expression you must add it to the Ingest Pipeline. Go to Stack Management > Ingest Pipelines and edit the filebeat-X.X.X-system-syslog-pipeline.
+
+![](screenshots/03-01-pipeline-edit.png)
+
+Scroll down and click Add a processor, make sure not to click the one under Failure processor:
+
+![](screenshots/03-02-add-processor.png)
+
+In the Manage Processor dialog, set the following:
+
+| Field | value |
+|---|---|
+| Processor | Grok |
+| Field | message |
+| Patterns | zmstat cpu.csv:.*:: %{DATA:statdate} %{DATA:stattime}, %{NUMBER:cpu-user:float}, %{NUMBER:cpu-nice:float}, %{NUMBER:cpu-sys:float}, %{NUMBER:cpu-idle:float}, %{NUMBER:cpu-iowait:float}, %{NUMBER:cpu-irq:float}, %{NUMBER:cpu-soft-irq:float} |
+| Ignore missing | checked |
+| Condition | ctx.message.contains('zmstat cpu.csv') |
+| Tag | cpucsv |
+| Ignore failure | checked |
+
+With the settings in the table we tell Ingress to apply the `grok` expression on a field called `Message`. The parsed `grok` result is then stored into new fields that can be used for further analysis and visualization. The `Condition` can be used to conditionally apply the `grok` expression, in this case only on logs coming from `zmstat cpu`. You can add multiple processors to deal with different types of logs.
+
+Then click Update and Save Pipeline.
+
+![](screenshots/03-03-processor.png)
+
+Changes made to the Ingress Pipeline will be applied to newly received logs in Elastic Stack. You can see the new fields by going to Observability > Logs > Stream find a search for `"message":"zmstat cpu.csv"` and select View details for any of the displayed logs.
+
+![](screenshots/03-04-details-menu.png)
+
+As you can see this log has additional fields called cpu-idle, cpu-iowait, cpu-sys etc.
+
+![](screenshots/03-05-new-fields.png)
+
+Setting up these filters is the hardest and most time consuming part of setting up Elastic Stack. See the dedicated how-to further in the guide to write your own. 
+
 ## Understanding Kibana UI
 
 This chapter is a walk-through for the Kibana UI. It shows the locations in the Kibana UI where you can find and analyze if the configuration of the previous steps in this guide are working. In the next chapter this guide will show you how to define more fields for logs that Elastic Stack is not parsing yet.
 
-### Stack Management
-
-In Stack Management you can go to Kibana -> Index Patterns -> Filebeat. Since we use RSyslog to gather all our logs to a single server, we only have this one Index Pattern.
-
-![](screenshots/04-stack-management.png)
-*Stack Management.*
-
-![](screenshots/05-index-patterns.png)
-*Kibana Index Patterns.*
-
-![](screenshots/05-index-patterns-open.png)
-*Contents of a Kibana Index.*
-
-You can use the search feature to look for fields that are defined in  `/etc/logstash/conf.d/10-syslog-filter.conf` that were set-up in the Installing Logstash section. 
-
-![](screenshots/06-index-patters-search-field.png)
-*Find a specific field in an Index.*
-
-In case you make changes to `grok` filters and add or change fields a Refresh Field List button appears in the UI. You have to click this button to be able to use the new fields. 
-
-You will be able to use the new field for data that is parsed after you click the button. Elastic Stack will not update fields and data retroactively. So even if data for a field is available in historic data, you will not be able to use it for visualizations. The Refresh Field List will not appear if Kibana does not see any changes.
-
-![](screenshots/07-reload.png)
-*The Refresh Field List button.*
-
 ### Observability
 
-In Observability->Logs you can see RAW log files as they come into Elastic Stack using the Stream Live option. If some log is missing here, it means it did not pass from RSyslog to Filebeat and you have to go back to the command line and look at the Installing Elastic Stack chapter to fix it. 
+In Observability->Logs you can see log data as they come into Elastic Stack using the Stream Live option. If some log is missing here, it means it did not pass from RSyslog to Filebeat and you have to go back to the command line and look at the Installing Elastic Stack chapter to fix it. 
 
 ![](screenshots/10-observability-logs.png)
-*RAW logs are in Observability/Logs.*
+*Logs are in Observability/Logs.*
 
 ![](screenshots/10-observability-logs-stream.png)
-*Analyze RAW logs as they are received in Observability/Logs.*
+*Analyze logs as they are received in Observability/Logs.*
 
 ### Analyzing
 
@@ -1256,10 +1175,7 @@ Restart Logstash so that it becomes aware of the new field:
 
 Since we added a `grok` filter you may need to hit the Refresh Field List button which appears in the UI if you go to Stack Management -> Index patterns -> filebeat-*. You have to click this button to be able to use the new fields. 
 
-You can use the new field for data that is parsed after you click the button. Elastic Stack will not update fields and data retroactively. So even if data for a field is available in historic data, you will not be able to use it for visualizations. The Refresh Field List will not appear if Kibana does not see any changes.
-
-![](screenshots/07-reload.png)
-*The Refresh Field List button.*
+You can use the new field for data that is parsed after you click the button. Elastic Stack will not update fields and data retroactively. So even if data for a field is available in historic data, you will not be able to use it for visualizations. 
 
 Now navigate to Analysis -> Discover or in older versions Kibana -> Discover. Use the search field to find the logs by using:
 
@@ -1493,7 +1409,7 @@ Using the data from the Nginx log one can display the number of server responses
 
 - https://logz.io/blog/logstash-grok/
 - https://www.elastic.co/guide/en/logstash/current/plugins-filters-grok.html
-- https://www.digitalocean.com/community/tutorials/adding-logstash-filters-to-improve-centralized-logginghttps://www.digitalocean.com/community/tutorials/adding-logstash-filters-to-improve-centralized-logging
+- https://www.digitalocean.com/community/tutorials/adding-logstash-filters-to-improve-centralized-logging
 
 
 ### BSD 3-Clause License
