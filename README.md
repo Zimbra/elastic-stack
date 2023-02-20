@@ -412,31 +412,45 @@ Finally it should look like this:
       
 ### Configuring RSyslog server
 
-Open `/etc/rsyslog.conf` and append under Global Directives:
+Open `/etc/rsyslog.conf` and configure it as follows:
 
-      #/etc/rsyslog.conf
-            
-      $DefaultNetstreamDriver gtls
-      
-      $DefaultNetstreamDriverCAFile /etc/rsyslog-certs/ca.pem
-      $DefaultNetstreamDriverCertFile /etc/rsyslog-certs/rslserver-cert.pem
-      $DefaultNetstreamDriverKeyFile /etc/rsyslog-certs/rslserver-key.pem
-      
-      $ModLoad imtcp
-      
-      $InputTCPServerStreamDriverAuthMode anon
-      $InputTCPServerStreamDriverMode 1 # run driver in TLS-only mode
-      
-      $ActionSendStreamDriverAuthMode x509/name
-      $ActionSendStreamDriverPermittedPeer elastic.barrydegraaff.nl
-      $ActionSendStreamDriverMode 1 # run driver in TLS-only mode
-      
-      $InputTCPServerRun 514
-      
-      # Increase the amount of open files rsyslog is allowed, which includes open tcp sockets
-      # This is important if there are many clients.
-      # http://www.rsyslog.com/doc/rsconf1_maxopenfiles.html
-      $MaxOpenFiles 2048
+```
+module(load="imuxsock")
+module(load="imklog" permitnonkernelfacility="on")
+
+module(load="imtcp" 
+    StreamDriver.Name="gtls"
+    StreamDriver.Mode="1"
+    StreamDriver.Authmode="x509/name"
+    PermittedPeer=["elastic.barrydegraaff.nl"]
+    )
+
+global(
+    DefaultNetstreamDriver="gtls"
+    DefaultNetstreamDriverCAFile="/etc/rsyslog-certs/ca.pem"
+    DefaultNetstreamDriverCertFile="/etc/rsyslog-certs/rslserver-cert.pem"
+    DefaultNetstreamDriverKeyFile="/etc/rsyslog-certs/rslserver-key.pem"
+    )
+
+    input(
+    type="imtcp"
+    port="514"
+    )
+
+$MaxOpenFiles 2048
+$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
+$RepeatedMsgReduction on
+$FileOwner syslog
+$FileGroup adm
+$FileCreateMode 0640
+$DirCreateMode 0755
+$Umask 0022
+$PrivDropToUser syslog
+$PrivDropToGroup syslog
+$WorkDirectory /var/spool/rsyslog
+$IncludeConfig /etc/rsyslog.d/*.conf
+
+```
 
 By setting this configuration you enforce TLS encryption and authentication on RSyslog. This means all traffic is encrypted and only trusted clients can log to our server.
 
@@ -452,6 +466,8 @@ Depending on your situation you can configure a (host) firewall or change the RS
 
 - https://www.thegeekdiary.com/how-to-configure-rsyslog-server-to-accept-logs-via-ssl-tls/
 - https://www.rsyslog.com/doc/master/tutorials/tls.html
+- https://michlstechblog.info/blog/rsyslog-configure-tls-ssl/
+- https://www.golinuxcloud.com/secure-remote-logging-rsyslog-tls-certificate/
 
 
 ## Configuring Zimbra to log to Centralized Log Server
@@ -468,25 +484,40 @@ Consider rebooting your system if it has been up for longer than 30 days.
 
 ### Configuring RSyslog client
 
-In `/etc/rsyslog.conf` append this configuration under Global Directives:
+Open `/etc/rsyslog.conf` and configure it as follows:
 
-      #### GLOBAL DIRECTIVES ####
-      
-      $DefaultNetstreamDriver gtls
-      
-      $DefaultNetstreamDriverCAFile /etc/rsyslog-certs/ca.pem
-      $DefaultNetstreamDriverCertFile /etc/rsyslog-certs/rslclient-cert.pem
-      $DefaultNetstreamDriverKeyFile /etc/rsyslog-certs/rslclient-key.pem
-      
-      $ActionSendStreamDriverPermittedPeer elastic.barrydegraaff.nl
-      $ActionSendStreamDriverMode 1 # run driver in TLS-only mode
-      $ActionSendStreamDriverAuthMode x509/name
-      
-You should use hosts that resolve over DNS so that TLS works. To start forwarding the logs add to the top of `/etc/rsyslog.d/50-default.conf` the following:
+```
+module(load="imuxsock")
+module(load="imklog" permitnonkernelfacility="on")
 
-      *.*     @@elastic.barrydegraaff.nl
+$DefaultNetstreamDriver gtls
 
-If you do not have a working DNS you can add a local hosts entry to `/etc/hosts`, make sure to use your own IP address and domain name:
+$DefaultNetstreamDriverCAFile /etc/rsyslog-certs/ca.pem
+$DefaultNetstreamDriverCertFile /etc/rsyslog-certs/rslclient-cert.pem
+$DefaultNetstreamDriverKeyFile /etc/rsyslog-certs/rslclient-key.pem
+
+$ActionSendStreamDriverPermittedPeer elastic.barrydegraaff.nl
+$ActionSendStreamDriverMode 1
+$ActionSendStreamDriverAuthMode x509/name
+
+# forward everything to remote server
+*.*     @@(o)elastic.barrydegraaff.nl:514
+
+$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
+$RepeatedMsgReduction on
+$FileOwner syslog
+$FileGroup adm
+$FileCreateMode 0640
+$DirCreateMode 0755
+$Umask 0022
+$PrivDropToUser syslog
+$PrivDropToGroup syslog
+$WorkDirectory /var/spool/rsyslog
+
+$IncludeConfig /etc/rsyslog.d/*.conf
+```
+
+You should use hosts that resolve over DNS so that TLS works. If you do not have a working DNS you can add a local hosts entry to `/etc/hosts`, make sure to use your own IP address and domain name:
 
       192.168.1.101 elastic.barrydegraaff.nl
 
@@ -541,6 +572,7 @@ For reference relevant Zimbra configuration files, automatically generated:
 
 - /opt/zimbra/conf/log4j.properties /opt/zimbra/conf/log4j.properties.in
 
+Note: In this article the Centralized Logging Server with Elastic Stack is running on Ubuntu 22 and Zimbra is running on a server with Ubuntu 20. The configuration syntax for remote logging using gtls driver in RSyslog differs between these versions and this is reflected in this guide.
 
 ## Installing Elastic Stack
 
