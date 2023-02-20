@@ -39,7 +39,7 @@ Please note that most of the config files and scripts that are in this guide are
 
 You will need one additional virtual machine that will serve as the RSyslog logging server and the Elastic Stack server. You can optionally split the two but this is not really needed and not described in this guide. You will have to pick an operating system that is both supported by RSyslog and Elastic Stack. The instructions in this guide are for Ubuntu 20.04 LTS. In detail:
 
-- OS: Ubuntu 20.04 LTS
+- OS: Ubuntu 22.04 LTS
 - RAM: 8GB
 - CPU: 4
 - Disk: 100GB (SSD preferred)
@@ -554,17 +554,29 @@ Elasticsearch is the search engine that powers Elastic Stack. It needs Java so i
 
 Then proceed by installing:
 
-      curl -fsSL https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
-      echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee -a /etc/apt/sources.list.d/elastic-7.x.list
-      sudo apt update
-      sudo apt install elasticsearch
+      wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg
+      sudo apt-get install apt-transport-https
+      echo "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-8.x.list
+      sudo apt-get update
+      sudo apt-get install elasticsearch
 
-Elasticsearch listens for traffic from everywhere on port 9200. You will want to restrict outside access to your Elasticsearch instance to prevent outsiders from reading your data or shutting down your Elasticsearch cluster through its REST API. To restrict access and therefore increase security, find the line that specifies `network.host`, uncomment it, and replace its value with `localhost` like this:
+Elastic Stack 8 has introduced new security features called `xpack`. These features include encrypted connections and authentication between all components. Setting it up requires some effort. In this article we will disable `xpack` security features, which basically brings back the functionality as in Elastic Stack 7. Configure Elasticsearch to diable `xpack` and allow connections from the local machine only `sudo nano /etc/elasticsearch/elasticsearch.yml`:
 
-      sudo nano /etc/elasticsearch/elasticsearch.yml
-      ...
-      network.host: localhost
-      ...
+```
+path.data: /var/lib/elasticsearch
+path.logs: /var/log/elasticsearch
+
+network.host: localhost
+xpack.security.enabled: false
+
+xpack.security.http.ssl:
+  enabled: false
+
+xpack.security.transport.ssl:
+  enabled: false
+
+cluster.initial_master_nodes: ["elastic.barrydegraaff.nl"]
+```
 
 Enable and start the service:
 
@@ -574,23 +586,23 @@ Enable and start the service:
 Test if it works:
 
       curl -X GET "localhost:9200"
-         {
-           "name" : "elastic.barrydegraaff.nl",
-           "cluster_name" : "elasticsearch",
-           "cluster_uuid" : "PkLqrCPVThOplMOfvdVJRA",
-           "version" : {
-             "number" : "7.12.0",
-             "build_flavor" : "default",
-             "build_type" : "deb",
-             "build_hash" : "78722783c38caa25a70982b5b042074cde5d3b3a",
-             "build_date" : "2021-03-18T06:17:15.410153305Z",
-             "build_snapshot" : false,
-             "lucene_version" : "8.8.0",
-             "minimum_wire_compatibility_version" : "6.8.0",
-             "minimum_index_compatibility_version" : "6.0.0-beta1"
-           },
-           "tagline" : "You Know, for Search"
-         }
+      {
+        "name" : "elastic.barrydegraaff.nl",
+        "cluster_name" : "elasticsearch",
+        "cluster_uuid" : "6g_cMTTCQdiP-KvpD9Uh-Q",
+        "version" : {
+          "number" : "8.6.2",
+          "build_flavor" : "default",
+          "build_type" : "deb",
+          "build_hash" : "2d58d0f136141f03239816a4e360a8d17b6d8f29",
+          "build_date" : "2023-02-13T09:35:20.314882762Z",
+          "build_snapshot" : false,
+          "lucene_version" : "9.4.2",
+          "minimum_wire_compatibility_version" : "7.17.0",
+          "minimum_index_compatibility_version" : "7.0.0"
+        },
+        "tagline" : "You Know, for Search"
+      }
       
 ### Installing Kibana Dashboard
 
@@ -598,11 +610,11 @@ Kibana is the Web application that allows you to visualize the logs and create d
 
       sudo apt install kibana
       sudo systemctl enable kibana
-      
 
-Open `/etc/kibana/kibana.yml` and append the following config to hide an annoying up-sell dialog:
+Open `/etc/kibana/kibana.yml` add add the following:
 
-      security.showInsecureClusterWarning: false
+         server.publicBaseUrl: "https://elastic.barrydegraaff.nl/"
+         security.showInsecureClusterWarning: false
 
 Finally start Kibana:
 
@@ -622,12 +634,12 @@ Put the following config in `/etc/nginx/sites-enabled/default`. Configure your o
 ````
 # Upstreams
 upstream backend {
-    server 127.0.0.1:5601;
+server 127.0.0.1:5601;
 }
 
 # HTTPS Server
 server {
-    listen 443;
+    listen 443 ssl;
     server_name elastic.barrydegraaff.nl;
 
     # You can increase the limit if your need to.
@@ -635,10 +647,24 @@ server {
 
     error_log /var/log/nginx/elastic.access.log;
 
-    ssl on;
     ssl_certificate /etc/letsencrypt/live/barrydegraaff.nl/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/barrydegraaff.nl/privkey.pem;
-    ssl_protocols TLSv1 TLSv1.1 TLSv1.2; # don’t use SSLv3 ref: POODLE
+    
+    # https://ssl-config.mozilla.org/#server=nginx&version=1.17.7&config=modern&openssl=1.1.1k&guideline=5.6
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:MozSSL:10m;  # about 40000 sessions
+    ssl_session_tickets off;
+
+    # modern configuration
+    ssl_protocols TLSv1.3;
+    ssl_prefer_server_ciphers off;
+
+    # HSTS (ngx_http_headers_module is required) (63072000 seconds)
+    add_header Strict-Transport-Security "max-age=63072000" always;
+
+    # OCSP stapling
+    ssl_stapling on;
+    ssl_stapling_verify on;
 
     auth_basic "Restricted Access";
     auth_basic_user_file /etc/nginx/htpasswd.users;
@@ -663,7 +689,9 @@ server {
     }
 }
 ````
+Finally start Kibana and restart Nginx:
 
+      sudo systemctl start kibana
       sudo systemctl restart nginx
 
 In case you have a firewall open port 443 and then test if you can access Kibana from https://elastic.barrydegraaff.nl/status
@@ -815,24 +843,62 @@ Filebeat is an Elastic Stack mechanism to transport log files from RSyslog to Lo
 
       sudo apt install filebeat
 
-Open the config files `/etc/filebeat/filebeat.yml` and enable:
+Open the config file `/etc/filebeat/filebeat.yml` and configure it as follows:
 
-      output.logstash:
-        # The Logstash hosts
-        hosts: ["localhost:5044"]
+```
+filebeat.inputs:
+- type: filestream
+  id: my-filestream-id
+  enabled: true
+  paths:
+    - /var/log/*.log
 
-Comment out the `output.elasticsearch:` like this:
+filebeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+  reload.enabled: false
 
-      #output.elasticsearch:
-        # Array of hosts to connect to.
-      #  hosts: ["localhost:9200"]
-   
+setup.template.settings:
+  index.number_of_shards: 1
+
+setup.dashboards.enabled: true
+
+setup.kibana:
+  host: "localhost:5601"
+
+output.elasticsearch:
+  hosts: ["localhost:9200"]
+
+processors:
+  - add_host_metadata:
+      when.not.contains.tags: forwarded
+  - add_cloud_metadata: ~
+  - add_docker_metadata: ~
+  - add_kubernetes_metadata: ~
+```
+
+Open the config file `/etc/filebeat/modules.d/system.yml` and configure it as follows:
+
+```
+- module: system
+  syslog:
+    enabled: true
+
+  auth:
+    enabled: true
+```
 
 Setup Filebeat index
 
       sudo filebeat modules enable system
       sudo filebeat modules list
-      sudo filebeat setup --pipelines --modules system
+      sudo filebeat setup --pipelines --modules system -M "system.syslog.enabled=true" -M "system.auth.enabled=true"
+
+This command should output:
+
+      Loaded Ingest pipelines
+
+Set-up indexes:
+
       sudo filebeat setup --index-management -E output.logstash.enabled=false -E 'output.elasticsearch.hosts=["localhost:9200"]'
 
 The last command will take some time and you should get output similar to:
@@ -840,12 +906,6 @@ The last command will take some time and you should get output similar to:
       Overwriting ILM policy is disabled. Set `setup.ilm.overwrite: true` for enabling.
       
       Index setup finished.
-      Loading dashboards (Kibana must be running and reachable)
-      Loaded dashboards
-      Setting up ML using setup --machine-learning is going to be removed in 8.0.0. Please use the ML app instead.
-      See more: https://www.elastic.co/guide/en/machine-learning/current/index.html
-      Loaded machine learning job configurations
-      Loaded Ingest pipelines
 
 Finally enable Filebeat
 
@@ -858,10 +918,24 @@ In the Web UI you should see the index now at  Management > Stack Management > I
 ![](screenshots/03-index.png)
 *Filebeat indices after initial setup.*
 
+You should be able to see some logs in Observability > Logs > Stream. In case the UI has changed, the URL:
+https://elastic.barrydegraaff.nl/app/logs/stream
+
+![](screenshots/03-logstream.png)
+*Some logs incoming after initial setup.*
+
+Final note, when running `filebeat setup` with `-E` or `-M` option one basically tells filebeat to ignore the config file options specified, this is to work around a bug. 
+
 ### References
 
 - https://www.digitalocean.com/community/tutorials/how-to-install-elasticsearch-logstash-and-kibana-elastic-stack-on-ubuntu-20-04
 - https://www.digitalocean.com/community/tutorials/how-to-install-java-with-apt-on-ubuntu-20-04
+- https://kifarunix.com/install-elk-stack-8-x-on-ubuntu/
+
+Bugs:
+
+- https://www.reddit.com/r/elasticsearch/comments/w8g64e/problems_with_enabling_filesets_in_filebeat/
+- https://github.com/elastic/beats/issues/30916
 
 ## Understanding Kibana UI
 
