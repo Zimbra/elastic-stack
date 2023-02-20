@@ -1,9 +1,9 @@
 # Module: tomcat
-# Docs: https://www.elastic.co/guide/en/beats/filebeat/7.10/filebeat-module-tomcat.html
+# Docs: https://www.elastic.co/guide/en/beats/filebeat/8.6/filebeat-module-tomcat.html
 
 - module: tomcat
   log:
-    enabled: true
+    enabled: false
 
     # Set which input to use between udp (default), tcp or file.
     # var.input: udp
@@ -12,6 +12,7 @@
 
     # Set paths for the log files when file input is used.
     # var.paths:
+    #   - /var/log/tomcat/*.log
 
     # Toggle output of non-ECS fields (default true).
     # var.rsa_fields: true

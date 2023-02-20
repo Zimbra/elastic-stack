@@ -1,9 +1,9 @@
 # Module: auditd
-# Docs: https://www.elastic.co/guide/en/beats/filebeat/7.10/filebeat-module-auditd.html
+# Docs: https://www.elastic.co/guide/en/beats/filebeat/8.6/filebeat-module-auditd.html
 
 - module: auditd
   log:
-    enabled: true
+    enabled: false
 
     # Set custom paths for the log files. If left empty,
     # Filebeat will choose the paths depending on your OS.

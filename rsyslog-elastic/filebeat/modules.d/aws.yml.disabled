@@ -1,5 +1,5 @@
 # Module: aws
-# Docs: https://www.elastic.co/guide/en/beats/filebeat/7.10/filebeat-module-aws.html
+# Docs: https://www.elastic.co/guide/en/beats/filebeat/8.6/filebeat-module-aws.html
 
 - module: aws
   cloudtrail:
@@ -7,6 +7,18 @@
 
     # AWS SQS queue url
     #var.queue_url: https://sqs.myregion.amazonaws.com/123456/myqueue
+
+    # AWS S3 bucket arn
+    #var.bucket_arn: 'arn:aws:s3:::mybucket'
+
+    # AWS S3 list prefix
+    #var.bucket_list_prefix: 'prefix'
+
+    # Bucket list interval on S3 bucket
+    #var.bucket_list_interval: 300s
+
+    # Number of workers on S3 bucket
+    #var.number_of_workers: 5
 
     # Process CloudTrail logs
     # default is true, set to false to skip Cloudtrail logs
@@ -45,11 +57,23 @@
     # Custom endpoint used to access AWS APIs
     #var.endpoint: amazonaws.com
 
+    # Default region to query if no other region is set
+    #var.default_region: us-east-1
+
     # AWS IAM Role to assume
     #var.role_arn: arn:aws:iam::123456789012:role/test-mb
 
     # Enabling this option changes the service name from `s3` to `s3-fips` for connecting to the correct service endpoint.
     #var.fips_enabled: false
+
+    # The maximum number of messages to return from SQS. Valid values: 1 to 10.
+    #var.max_number_of_messages: 5
+
+    # URL to proxy AWS API calls
+    #var.proxy_url: http://proxy:3128
+
+    # Configures the SSL settings, ie. set trusted CAs, ignore certificate verification....
+    #var.ssl:
 
   cloudwatch:
     enabled: false
@@ -57,6 +81,18 @@
     # AWS SQS queue url
     #var.queue_url: https://sqs.myregion.amazonaws.com/123456/myqueue
 
+    # AWS S3 bucket arn
+    #var.bucket_arn: 'arn:aws:s3:::mybucket'
+
+    # AWS S3 list prefix
+    #var.bucket_list_prefix: 'prefix'
+
+    # Bucket list interval on S3 bucket
+    #var.bucket_list_interval: 300s
+
+    # Number of workers on S3 bucket
+    #var.number_of_workers: 5
+
     # Filename of AWS credential file
     # If not set "$HOME/.aws/credentials" is used on Linux/Mac
     # "%UserProfile%\.aws\credentials" is used on Windows
@@ -82,11 +118,23 @@
     # Custom endpoint used to access AWS APIs
     #var.endpoint: amazonaws.com
 
+    # Default region to query if no other region is set
+    #var.default_region: us-east-1
+
     # AWS IAM Role to assume
     #var.role_arn: arn:aws:iam::123456789012:role/test-mb
 
     # Enabling this option changes the service name from `s3` to `s3-fips` for connecting to the correct service endpoint.
     #var.fips_enabled: false
+
+    # The maximum number of messages to return from SQS. Valid values: 1 to 10.
+    #var.max_number_of_messages: 5
+
+    # URL to proxy AWS API calls
+    #var.proxy_url: http://proxy:3128
+
+    # Configures the SSL settings, ie. set trusted CAs, ignore certificate verification....
+    #var.ssl:
 
   ec2:
     enabled: false
@@ -94,6 +142,18 @@
     # AWS SQS queue url
     #var.queue_url: https://sqs.myregion.amazonaws.com/123456/myqueue
 
+    # AWS S3 bucket arn
+    #var.bucket_arn: 'arn:aws:s3:::mybucket'
+
+    # AWS S3 list prefix
+    #var.bucket_list_prefix: 'prefix'
+
+    # Bucket list interval on S3 bucket
+    #var.bucket_list_interval: 300s
+
+    # Number of workers on S3 bucket
+    #var.number_of_workers: 5
+
     # Filename of AWS credential file
     # If not set "$HOME/.aws/credentials" is used on Linux/Mac
     # "%UserProfile%\.aws\credentials" is used on Windows
@@ -119,11 +179,23 @@
     # Custom endpoint used to access AWS APIs
     #var.endpoint: amazonaws.com
 
+    # Default region to query if no other region is set
+    #var.default_region: us-east-1
+
     # AWS IAM Role to assume
     #var.role_arn: arn:aws:iam::123456789012:role/test-mb
 
     # Enabling this option changes the service name from `s3` to `s3-fips` for connecting to the correct service endpoint.
     #var.fips_enabled: false
+
+    # The maximum number of messages to return from SQS. Valid values: 1 to 10.
+    #var.max_number_of_messages: 5
+
+    # URL to proxy AWS API calls
+    #var.proxy_url: http://proxy:3128
+
+    # Configures the SSL settings, ie. set trusted CAs, ignore certificate verification....
+    #var.ssl:
 
   elb:
     enabled: false
@@ -131,6 +203,18 @@
     # AWS SQS queue url
     #var.queue_url: https://sqs.myregion.amazonaws.com/123456/myqueue
 
+    # AWS S3 bucket arn
+    #var.bucket_arn: 'arn:aws:s3:::mybucket'
+
+    # AWS S3 list prefix
+    #var.bucket_list_prefix: 'prefix'
+
+    # Bucket list interval on S3 bucket
+    #var.bucket_list_interval: 300s
+
+    # Number of workers on S3 bucket
+    #var.number_of_workers: 5
+
     # Filename of AWS credential file
     # If not set "$HOME/.aws/credentials" is used on Linux/Mac
     # "%UserProfile%\.aws\credentials" is used on Windows
@@ -156,11 +240,23 @@
     # Custom endpoint used to access AWS APIs
     #var.endpoint: amazonaws.com
 
+    # Default region to query if no other region is set
+    #var.default_region: us-east-1
+
     # AWS IAM Role to assume
     #var.role_arn: arn:aws:iam::123456789012:role/test-mb
 
     # Enabling this option changes the service name from `s3` to `s3-fips` for connecting to the correct service endpoint.
     #var.fips_enabled: false
+
+    # The maximum number of messages to return from SQS. Valid values: 1 to 10.
+    #var.max_number_of_messages: 5
+
+    # URL to proxy AWS API calls
+    #var.proxy_url: http://proxy:3128
+
+    # Configures the SSL settings, ie. set trusted CAs, ignore certificate verification....
+    #var.ssl:
 
   s3access:
     enabled: false
@@ -168,6 +264,18 @@
     # AWS SQS queue url
     #var.queue_url: https://sqs.myregion.amazonaws.com/123456/myqueue
 
+    # AWS S3 bucket arn
+    #var.bucket_arn: 'arn:aws:s3:::mybucket'
+
+    # AWS S3 list prefix
+    #var.bucket_list_prefix: 'prefix'
+
+    # Bucket list interval on S3 bucket
+    #var.bucket_list_interval: 300s
+
+    # Number of workers on S3 bucket
+    #var.number_of_workers: 5
+
     # Filename of AWS credential file
     # If not set "$HOME/.aws/credentials" is used on Linux/Mac
     # "%UserProfile%\.aws\credentials" is used on Windows
@@ -193,11 +301,23 @@
     # Custom endpoint used to access AWS APIs
     #var.endpoint: amazonaws.com
 
+    # Default region to query if no other region is set
+    #var.default_region: us-east-1
+
     # AWS IAM Role to assume
     #var.role_arn: arn:aws:iam::123456789012:role/test-mb
 
     # Enabling this option changes the service name from `s3` to `s3-fips` for connecting to the correct service endpoint.
     #var.fips_enabled: false
+
+    # The maximum number of messages to return from SQS. Valid values: 1 to 10.
+    #var.max_number_of_messages: 5
+
+    # URL to proxy AWS API calls
+    #var.proxy_url: http://proxy:3128
+
+    # Configures the SSL settings, ie. set trusted CAs, ignore certificate verification....
+    #var.ssl:
 
   vpcflow:
     enabled: false
@@ -205,6 +325,18 @@
     # AWS SQS queue url
     #var.queue_url: https://sqs.myregion.amazonaws.com/123456/myqueue
 
+    # AWS S3 bucket arn
+    #var.bucket_arn: 'arn:aws:s3:::mybucket'
+
+    # AWS S3 list prefix
+    #var.bucket_list_prefix: 'prefix'
+
+    # Bucket list interval on S3 bucket
+    #var.bucket_list_interval: 300s
+
+    # Number of workers on S3 bucket
+    #var.number_of_workers: 5
+
     # Filename of AWS credential file
     # If not set "$HOME/.aws/credentials" is used on Linux/Mac
     # "%UserProfile%\.aws\credentials" is used on Windows
@@ -230,8 +362,23 @@
     # Custom endpoint used to access AWS APIs
     #var.endpoint: amazonaws.com
 
+    # Default region to query if no other region is set
+    #var.default_region: us-east-1
+
     # AWS IAM Role to assume
     #var.role_arn: arn:aws:iam::123456789012:role/test-mb
 
     # Enabling this option changes the service name from `s3` to `s3-fips` for connecting to the correct service endpoint.
     #var.fips_enabled: false
+
+    # The maximum number of messages to return from SQS. Valid values: 1 to 10.
+    #var.max_number_of_messages: 5
+
+    # URL to proxy AWS API calls
+    #var.proxy_url: http://proxy:3128
+
+    # Configures the SSL settings, ie. set trusted CAs, ignore certificate verification....
+    #var.ssl:
+
+    # Specify a custom VPC flow log format.
+    #var.format:

@@ -1,10 +1,10 @@
 # Module: redis
-# Docs: https://www.elastic.co/guide/en/beats/filebeat/7.10/filebeat-module-redis.html
+# Docs: https://www.elastic.co/guide/en/beats/filebeat/8.6/filebeat-module-redis.html
 
 - module: redis
   # Main logs
   log:
-    enabled: true
+    enabled: false
 
     # Set custom paths for the log files. If left empty,
     # Filebeat will choose the paths depending on your OS.
@@ -12,7 +12,7 @@
 
   # Slow logs, retrieved via the Redis API (SLOWLOG)
   slowlog:
-    enabled: true
+    enabled: false
 
     # The Redis hosts to connect to.
     #var.hosts: ["localhost:6379"]

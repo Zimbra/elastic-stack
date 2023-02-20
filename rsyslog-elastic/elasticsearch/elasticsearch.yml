@@ -50,11 +50,13 @@ path.logs: /var/log/elasticsearch
 #
 # ---------------------------------- Network -----------------------------------
 #
-# Set the bind address to a specific IP (IPv4 or IPv6):
+# By default Elasticsearch is only accessible on localhost. Set a different
+# address here to expose this node on the network:
 #
-network.host: localhost
+#network.host: 192.168.0.1
 #
-# Set a custom port for HTTP:
+# By default Elasticsearch listens for HTTP traffic on the first free port it
+# finds starting at 9200. Set a specific HTTP port here:
 #
 #http.port: 9200
 #
@@ -73,16 +75,52 @@ network.host: localhost
 #
 # For more information, consult the discovery and cluster formation module documentation.
 #
-# ---------------------------------- Gateway -----------------------------------
+# --------------------------------- Readiness ----------------------------------
 #
-# Block initial recovery after a full cluster restart until N nodes are started:
+# Enable an unauthenticated TCP readiness endpoint on localhost
 #
-#gateway.recover_after_nodes: 3
-#
-# For more information, consult the gateway module documentation.
+#readiness.port: 9399
 #
 # ---------------------------------- Various -----------------------------------
 #
-# Require explicit names when deleting indices:
+# Allow wildcard deletion of indices:
 #
-#action.destructive_requires_name: true
+#action.destructive_requires_name: false
+
+#----------------------- BEGIN SECURITY AUTO CONFIGURATION -----------------------
+#
+# The following settings, TLS certificates, and keys have been automatically      
+# generated to configure Elasticsearch security features on 20-02-2023 06:49:24
+#
+# --------------------------------------------------------------------------------
+
+# Enable security features
+network.host: localhost
+xpack.security.enabled: false
+
+#xpack.security.enrollment.enabled: true
+
+# Enable encryption for HTTP API client connections, such as Kibana, Logstash, and Agents
+xpack.security.http.ssl:
+  enabled: false
+#  keystore.path: certs/http.p12
+
+# Enable encryption and mutual authentication between cluster nodes
+xpack.security.transport.ssl:
+  enabled: false
+#  verification_mode: certificate
+#  keystore.path: certs/transport.p12
+#  truststore.path: certs/transport.p12
+# Create a new cluster with the current node only
+# Additional nodes can still join the cluster later
+cluster.initial_master_nodes: ["elastic.barrydegraaff.nl"]
+
+# Allow HTTP API connections from anywhere
+# Connections are encrypted and require user authentication
+##http.host: 0.0.0.0
+
+# Allow other nodes to join the cluster from anywhere
+# Connections are encrypted and mutually authenticated
+#transport.host: 0.0.0.0
+
+#----------------------- END SECURITY AUTO CONFIGURATION -------------------------

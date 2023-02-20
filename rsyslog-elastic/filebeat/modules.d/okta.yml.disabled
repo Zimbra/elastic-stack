@@ -1,9 +1,9 @@
 # Module: okta
-# Docs: https://www.elastic.co/guide/en/beats/filebeat/7.10/filebeat-module-okta.html
+# Docs: https://www.elastic.co/guide/en/beats/filebeat/8.6/filebeat-module-okta.html
 
 - module: okta
   system:
-    enabled: true
+    enabled: false
     # You must configure the URL with your Okta domain and provide an
     # API token to access the logs API.
     #var.url: https://yourOktaDomain/api/v1/logs

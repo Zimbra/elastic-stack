@@ -1,22 +1,36 @@
 # Upstreams
 upstream backend {
-    server 127.0.0.1:5601;
+server 127.0.0.1:5601;
 }
 
 # HTTPS Server
 server {
-    listen 443;
-    server_name elastic.zimbratest.tk;
+    listen 443 ssl;
+    server_name elastic.barrydegraaff.nl;
 
     # You can increase the limit if your need to.
     client_max_body_size 200M;
 
     error_log /var/log/nginx/elastic.access.log;
 
-    ssl on;
-    ssl_certificate /etc/letsencrypt/live/zimbratest.tk/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/zimbratest.tk/privkey.pem;
-    ssl_protocols TLSv1 TLSv1.1 TLSv1.2; # don’t use SSLv3 ref: POODLE
+    ssl_certificate /etc/letsencrypt/live/barrydegraaff.nl/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/barrydegraaff.nl/privkey.pem;
+    
+    # https://ssl-config.mozilla.org/#server=nginx&version=1.17.7&config=modern&openssl=1.1.1k&guideline=5.6
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:MozSSL:10m;  # about 40000 sessions
+    ssl_session_tickets off;
+
+    # modern configuration
+    ssl_protocols TLSv1.3;
+    ssl_prefer_server_ciphers off;
+
+    # HSTS (ngx_http_headers_module is required) (63072000 seconds)
+    add_header Strict-Transport-Security "max-age=63072000" always;
+
+    # OCSP stapling
+    ssl_stapling on;
+    ssl_stapling_verify on;
 
     auth_basic "Restricted Access";
     auth_basic_user_file /etc/nginx/htpasswd.users;

@@ -1,10 +1,10 @@
 # Module: azure
-# Docs: https://www.elastic.co/guide/en/beats/filebeat/7.10/filebeat-module-azure.html
+# Docs: https://www.elastic.co/guide/en/beats/filebeat/8.6/filebeat-module-azure.html
 
 - module: azure
   # All logs
   activitylogs:
-    enabled: true
+    enabled: false
     var:
       # eventhub name containing the activity logs, overwrite he default value if the logs are exported in a different eventhub
       eventhub: "insights-operational-logs"
@@ -14,8 +14,20 @@
       connection_string: ""
       # the name of the storage account the state/offsets will be stored and updated
       storage_account: ""
+      # the name of the storage account container you would like to store the offset information in.
+      storage_account_container: ""
       # the storage account key, this key will be used to authorize access to data in your storage account
       storage_account_key: ""
+
+  platformlogs:
+    enabled: false
+  #  var:
+  #    eventhub: ""
+  #    consumer_group: "$Default"
+  #    connection_string: ""
+  #    storage_account: ""
+  #    storage_account_key: ""
+
 
   auditlogs:
     enabled: false

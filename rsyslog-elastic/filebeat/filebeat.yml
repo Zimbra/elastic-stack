@@ -18,55 +18,14 @@ filebeat.inputs:
 # you can use different inputs for various configurations.
 # Below are the input specific configurations.
 
-- type: log
-
-  # Change to true to enable this input configuration.
-  enabled: false
-
-  # Paths that should be crawled and fetched. Glob based paths.
-  paths:
-    - /var/log/*.log
-    #- c:\programdata\elasticsearch\logs\*
-
-  # Exclude lines. A list of regular expressions to match. It drops the lines that are
-  # matching any regular expression from the list.
-  #exclude_lines: ['^DBG']
-
-  # Include lines. A list of regular expressions to match. It exports the lines that are
-  # matching any regular expression from the list.
-  #include_lines: ['^ERR', '^WARN']
-
-  # Exclude files. A list of regular expressions to match. Filebeat drops the files that
-  # are matching any regular expression from the list. By default, no files are dropped.
-  #exclude_files: ['.gz$']
-
-  # Optional additional fields. These fields can be freely picked
-  # to add additional information to the crawled log files for filtering
-  #fields:
-  #  level: debug
-  #  review: 1
-
-  ### Multiline options
-
-  # Multiline can be used for log messages spanning multiple lines. This is common
-  # for Java Stack Traces or C-Line Continuation
-
-  # The regexp Pattern that has to be matched. The example pattern matches all lines starting with [
-  #multiline.pattern: ^\[
-
-  # Defines if the pattern set under pattern should be negated or not. Default is false.
-  #multiline.negate: false
-
-  # Match can be set to "after" or "before". It is used to define if lines should be append to a pattern
-  # that was (not) matched before or after or as long as a pattern is not matched based on negate.
-  # Note: After is the equivalent to previous and before is the equivalent to to next in Logstash
-  #multiline.match: after
-
-# filestream is an experimental input. It is going to replace log input in the future.
+# filestream is an input for collecting log messages from files.
 - type: filestream
 
+  # Unique ID among all inputs, an ID is required.
+  id: my-filestream-id
+
   # Change to true to enable this input configuration.
-  enabled: false
+  enabled: true
 
   # Paths that should be crawled and fetched. Glob based paths.
   paths:
@@ -75,10 +34,14 @@ filebeat.inputs:
 
   # Exclude lines. A list of regular expressions to match. It drops the lines that are
   # matching any regular expression from the list.
+  # Line filtering happens after the parsers pipeline. If you would like to filter lines
+  # before parsers, use include_message parser.
   #exclude_lines: ['^DBG']
 
   # Include lines. A list of regular expressions to match. It exports the lines that are
   # matching any regular expression from the list.
+  # Line filtering happens after the parsers pipeline. If you would like to filter lines
+  # before parsers, use include_message parser.
   #include_lines: ['^ERR', '^WARN']
 
   # Exclude files. A list of regular expressions to match. Filebeat drops the files that
@@ -130,7 +93,7 @@ setup.template.settings:
 # These settings control loading the sample dashboards to the Kibana index. Loading
 # the dashboards is disabled by default and can be enabled either by setting the
 # options here or by using the `setup` command.
-#setup.dashboards.enabled: false
+setup.dashboards.enabled: true
 
 # The URL from where to download the dashboards archive. By default this URL
 # has a value which is computed based on the Beat name and version. For released
@@ -148,7 +111,7 @@ setup.kibana:
   # Scheme and port can be left out and will be set to the default (http and 5601)
   # In case you specify and additional path, the scheme is required: http://localhost:5601/path
   # IPv6 addresses should always be defined as: https://[2001:db8::1]:5601
-  #host: "localhost:5601"
+  host: "localhost:5601"
 
   # Kibana Space ID
   # ID of the Kibana Space into which the dashboards should be loaded. By default,
@@ -173,9 +136,9 @@ setup.kibana:
 # Configure what output to use when sending the data collected by the beat.
 
 # ---------------------------- Elasticsearch Output ----------------------------
-#output.elasticsearch:
+output.elasticsearch:
   # Array of hosts to connect to.
-  #hosts: ["localhost:9200"]
+  hosts: ["localhost:9200"]
 
   # Protocol - either `http` (default) or `https`.
   #protocol: "https"
@@ -186,9 +149,9 @@ setup.kibana:
   #password: "changeme"
 
 # ------------------------------ Logstash Output -------------------------------
-output.logstash:
+#output.logstash:
   # The Logstash hosts
-  hosts: ["localhost:5044"]
+  #hosts: ["localhost:5044"]
 
   # Optional SSL. By default is off.
   # List of root certificates for HTTPS server verifications
@@ -216,7 +179,7 @@ processors:
 
 # At debug level, you can selectively enable logging only for some components.
 # To enable all selectors use ["*"]. Examples of other selectors are "beat",
-# "publish", "service".
+# "publisher", "service".
 #logging.selectors: ["*"]
 
 # ============================= X-Pack Monitoring ==============================
