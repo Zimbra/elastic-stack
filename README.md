@@ -603,16 +603,14 @@ If you have trouble getting logs into RSyslog you can enable debugging by adding
       $DebugFile /root/RSYSLOG.txt
 
 
-### References
+### References and notes
+
+Note: In this article the Centralized Logging Server with Elastic Stack is running on Ubuntu 22 and Zimbra is running on a server with Ubuntu 20. The configuration syntax for remote logging using gtls driver in RSyslog differs between these versions and this is reflected in this guide.
 
 - https://www.thegeekdiary.com/configuring-remote-logging-using-rsyslog-in-centos-rhel/
 - https://zimbra.github.io/zimbra-9/adminguide.html#monitoring_zcs_servers
+- https://wiki.zimbra.com/wiki/Log_Files
 
-For reference relevant Zimbra configuration files, automatically generated:
-
-- /opt/zimbra/conf/log4j.properties /opt/zimbra/conf/log4j.properties.in
-
-Note: In this article the Centralized Logging Server with Elastic Stack is running on Ubuntu 22 and Zimbra is running on a server with Ubuntu 20. The configuration syntax for remote logging using gtls driver in RSyslog differs between these versions and this is reflected in this guide.
 
 ## Installing Elastic Stack
 
@@ -890,9 +888,9 @@ https://elastic.barrydegraaff.nl/app/logs/stream
 ![](screenshots/03-logstream.png)
 *Some logs incoming after initial setup.*
 
-Final note, when running `filebeat setup` with `-E` or `-M` option one basically tells filebeat to ignore the config file options specified, this is to work around a bug. 
+### References and notes
 
-### References
+Note: when running `filebeat setup` with `-E` or `-M` option one basically tells filebeat to ignore the config file options specified, this is to work around a bug. 
 
 - https://www.digitalocean.com/community/tutorials/how-to-install-elasticsearch-logstash-and-kibana-elastic-stack-on-ubuntu-20-04
 - https://www.digitalocean.com/community/tutorials/how-to-install-java-with-apt-on-ubuntu-20-04
