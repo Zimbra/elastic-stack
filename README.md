@@ -997,10 +997,7 @@ By using Analyzing > Discover you can see what logs have been processed by Elast
 *Dig into the parsed logs in Analytics/Discover.*
 
 ![](screenshots/12-analytics-discover-search.png)
-*Search for a log.*
-
-![](screenshots/13-analytics-discover-log-detail.png)
-*Check the details to see the parsed fields.*
+*Search for a log and expand the details.*
 
 ![](screenshots/14-analytics-discover-log-detail-zimbra.png)
 *Find Zimbra specific fields available for visualization.*
