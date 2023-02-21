@@ -949,8 +949,6 @@ As you can see this log has additional fields called cpu-idle, cpu-iowait, cpu-s
 
 ![](screenshots/03-05-new-fields.png)
 
-Setting up these filters is the hardest and most time consuming part of setting up Elastic Stack. See the dedicated how-to further in the guide to write your own. 
-
 ### Grok for failed login attempts from audit.log
 
 You can add another processor in the Ingress Pipeline to find failed login attempts. Example authentication error from audit.log:
@@ -972,6 +970,13 @@ The result:
   "failip": "192.168.1.126"
 }
 ```
+
+### Using the `grok` debugger
+
+When writing the `grok` filter you can use the `grok` debugger in the Kibana UI. This way you can make sure your regular expression matches the log, before adding it to Elastic Stack.
+
+![](screenshots/37b-grok-debugger.png)
+*The `grok` debugger tool*
 
 ## Understanding Kibana UI
 
@@ -1247,13 +1252,6 @@ Next verify that the field `zimbra_simplestat_cpu` is parsed in the log by expan
 *Selecting the `zimbra_simplestat_cpu` field.*
 
 Once you are satisfied with your query, hit the Save button.
-
-#### Using the `grok` debugger
-
-When writing the `grok` filter you can use the `grok` debugger in the Kibana UI. This way you can make sure your regular expression matches the log, before adding it to Elastic Stack.
-
-![](screenshots/37b-grok-debugger.png)
-*The `grok` debugger tool*
 
 #### Create the percentage visualization
 
