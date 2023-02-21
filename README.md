@@ -929,9 +929,9 @@ In the Manage Processor dialog, set the following:
 |---|---|
 | Processor | Grok |
 | Field | message |
-| Patterns | zmstat cpu.csv:.*:: %{DATA:statdate} %{DATA:stattime}, %{NUMBER:cpu-user:float}, %{NUMBER:cpu-nice:float}, %{NUMBER:cpu-sys:float}, %{NUMBER:cpu-idle:float}, %{NUMBER:cpu-iowait:float}, %{NUMBER:cpu-irq:float}, %{NUMBER:cpu-soft-irq:float} |
+| Patterns | `zmstat cpu.csv:.*:: %{DATA:statdate} %{DATA:stattime}, %{NUMBER:cpu-user:float}, %{NUMBER:cpu-nice:float}, %{NUMBER:cpu-sys:float}, %{NUMBER:cpu-idle:float}, %{NUMBER:cpu-iowait:float}, %{NUMBER:cpu-irq:float}, %{NUMBER:cpu-soft-irq:float}` |
 | Ignore missing | checked |
-| Condition | ctx.message.contains('zmstat cpu.csv') |
+| Condition | `ctx.message.contains('zmstat cpu.csv')` |
 | Tag | cpucsv |
 | Ignore failure | checked |
 
@@ -1017,9 +1017,9 @@ The count visualization is the simplest form of visualization in Kibana. It coun
 
 First navigate to Analysis > Discover or in older versions Kibana > Discover. Use the search field to find the logs. Here are some Postfix examples:
 
-- `message:"postfix" and "status=bounced"`
-- `message:"postfix" and "status=deferred"`
-- `message:"postfix" and "status=sent"`
+- `message:"postfix" and message:"status=bounced"`
+- `message:"postfix" and message:"status=deferred"`
+- `message:"postfix" and message:"status=sent"`
 
 ![](screenshots/15-count-visualization.png)
 *Searching for Postfix logs.*
@@ -1060,19 +1060,14 @@ Here are some screenshots that show the final result:
 ![](screenshots/21-visualization-tab3.png)
 *The Panel tab allows for tweaking the way the visualization is displayed in a Dashboard.*
 
-Don't forget to hit Save.
+Don't forget to hit Save. Upon saving you will be asked to create a new dashboard, save to an existing dashboard or just save the visualization without adding it to a dashboard. You can create a new dashboard if you wish or create a new dashboard later.
 
 #### Create a dashboard
 
-Create a new Dashboard by going to Analysis > Dashboard and New Dashboard. In older versions Kibana > Dashboard and New Dashboard. 
-
-![](screenshots/22-new-dashboard.png)
-*Click Add from Library to add the Visualization.*
-
-_or in older versions:_
+Create a new Dashboard by going to Analytics > Dashboard. 
 
 ![](screenshots/23-new-dashboard.png)
-*Click Add an Existing object and select the visualization. .*
+*Click Add from Library and search your saved visualization.*
 
 ![](screenshots/24-result-in-dashboard.png)
 *The visualization is now on the Dashboard.*
@@ -1084,41 +1079,14 @@ Don't forget to click Save to save the Dashboard.
 
 Kibana can also create visualization based on parsed values (fields) from your logs. This way you can create line charts to get insights into things like CPU, RAM, and disk usage etc. This only works if Elastic Stack has parsed the RAW log into fields using a `grok` filter. The filter also tells Kibana what type of number is expected, for example floating point or integer.
 
-Take a look at the following `grok` filter:
+To visualize the CPU statistics using the `grok` pattern from the Ingest Pipeline chapter, navigate to Analysis > Discover or in older versions Kibana > Discover. Use the search field to find the logs from vmstat. By using:
 
-`/etc/logstash/conf.d/10-syslog-filter.conf`
+- `"zmstat cpu.csv"`
 
-```
-  #parse zmstat vm.csv
-  grok {
-    match => { "message" => ["%{SYSLOGTIMESTAMP:[system][syslog][timestamp]} %{SYSLOGHOST:[system][auth][hostname]} %{DATA:[system][syslog][program]}(?:\[%{POSINT:[system][syslog][pid]}\]): %{NUMBER:statpid}:info: zmstat vm.csv:.*:: %{DATA:statdate} %{DATA:stattime}, %{NUMBER:zimbra_stats_vm_r:float}, %{NUMBER:zimbra_stats_vm_b:float}, %{NUMBER:zimbra_stats_vm_swpd:float}, %{NUMBER:zimbra_stats_vm_free:float}, %{NUMBER:zimbra_stats_vm_buff:float}, %{NUMBER:zimbra_stats_vm_cache:float}, %{NUMBER:zimbra_stats_vm_si:float}, %{NUMBER:zimbra_stats_vm_so:float}, %{NUMBER:zimbra_stats_vm_bi:float}, %{NUMBER:zimbra_stats_vm_bo:float}, %{NUMBER:zimbra_stats_vm_in:float}, %{NUMBER:zimbra_stats_vm_cs:float}, %{NUMBER:zimbra_stats_vm_us:float}, %{NUMBER:zimbra_stats_vm_sy:float}, %{NUMBER:zimbra_stats_vm_id:float}, %{NUMBER:zimbra_stats_vm_wa:float}, %{NUMBER:zimbra_stats_vm_st:float}, %{NUMBER:zimbra_stats_vm_MemTotal:float}"] }
-    pattern_definitions => { "GREEDYMULTILINE" => "(.|\n)*" }
-    remove_tag => [ "_grokparsefailure" ]
-    add_tag => ["zmstats"]
-  }
-  date {
-    match => [ "[system][syslog][timestamp]", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss" ]
-  }
-```
-
-This `grok` filter parses a log line that looks like this:
-
-      Apr 20 08:45:47 mind zimbramon[11365]: 11365:info: zmstat vm.csv: timestamp, r, b, swpd, free, buff, cache, si, so, bi, bo, in, cs, us, sy, id, wa, st, MemTotal, MemFree, MemAvailable, Buffers, Cached, SwapCached, Active, Inactive, Active(anon), Inactive(anon), Active(file), Inactive(file), Unevictable, Mlocked, SwapTotal, SwapFree, Dirty, Writeback, AnonPages, Mapped, Shmem, Slab, SReclaimable, SUnreclaim, KernelStack, PageTables, NFS_Unstable, Bounce, WritebackTmp, CommitLimit, Committed_AS, VmallocTotal, VmallocUsed, VmallocChunk, Percpu, HardwareCorrupted, AnonHugePages, CmaTotal, CmaFree, HugePages_Total, HugePages_Free, HugePages_Rsvd, HugePages_Surp, Hugepagesize, DirectMap4k, DirectMap2M, DirectMap1G, loadavg:: 04/20/2021 08:45:47, 0, 0, 0, 543720, 0, 1205116, 0, 0, 1, 62, 591, 974, 0, 0, 99, 0, 0, 8008744, 543720, 1029024, 0, 1042:::CD897126-A1B4-11EB-9C85-EB0C489C3827:::
-
-The memory statistics are generated by the vmstat (virtual memory statistics) monitoring utility, for more information on what parameters are reported see the references section.
-
-
-First navigate to Analysis > Discover or in older versions Kibana > Discover. Use the search field to find the logs from vmstat. By using:
-
-- `"zmstat vm.csv"`
+And select the fields needed for visualization:
 
 ![](screenshots/25-discover.png)
-*Searching for vmstat logs.*
-
-Next select the fields needed for visualization. Expand the log details and find the field you want. Then select it from the list on the left.
-
-![](screenshots/27-add-field-column.png)
-*Select the fields for visualization.*
+*Searching for logs and select fields.*
 
 Once the fields are selected, you will see them displayed as columns on the screen:
 
@@ -1158,11 +1126,14 @@ Here are some screenshots that show the final result:
 ![](screenshots/33-timeframe.png)
 *Sometimes expanding the time range makes it easier to get a good visualization.*
 
+![](screenshots/34-result-in-8.png)
+*An example of a CPU visualization in Elastic Stack 8.*
+
 Don't forget to hit Save.
 
 #### Adding the visualization to the dashboard
 
-If you already have a Dashboard you can open it by going to Analysis > Dashboard. Or in older versions Kibana > Dashboard. Then click Edit. Then click the Add from library button or the Add menu item in older versions. For more information on how to create a dashboard see the previous chapter. The final result will look something like this:
+If you already have a Dashboard you can open it by going to Analytics > Dashboard. Then click Edit. Then click the Add from library button or the Add menu item in older versions. For more information on how to create a dashboard see the previous chapter. The final result will look something like this:
 
 ![](screenshots/34-result-line.png)
 *The visualization is now on the Dashboard.*
@@ -1209,39 +1180,27 @@ Run the script every minute so a log appears that can be used in Elastic Stack. 
 
       * * * * * root /usr/local/sbin/zimbra-simple-stat.sh
 
-Now add the following `grok` filter to `/etc/logstash/conf.d/10-syslog-filter.conf`
+Now add the following `grok` processor to the Ingress Pipeline, refer to the Ingress Pipelines chapter if needed:
 
-```
-  #parse zimbra-simple-stat from /usr/local/sbin/zimbra-simple-stat.sh
-  # echo "CPU `LC_ALL=C top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1}'`% RAM `free -m | awk '/Mem:/ { printf("%3.1f%%", $3/$2*100) }'` HDD `df -h / | awk '/\// {print $(NF-1)}'`"  | logger -t "zimbra-simple-stat"
-  grok {
-    match => { "message" => ["%{SYSLOGTIMESTAMP:[system][syslog][timestamp]} %{SYSLOGHOST:[system][auth][hostname]} %{DATA:[system][syslog][program]}zimbra-simple-stat: CPU %{NUMBER:zimbra_simplestat_cpu:float}% RAM %{NUMBER:zimbra_simplestat_ram:float}% HDD %{NUMBER:zimbra_simplestat_hdd:float}%"] }
-    pattern_definitions => { "GREEDYMULTILINE" => "(.|\n)*" }
-    remove_tag => [ "_grokparsefailure" ]
-    add_tag => ["zimbra-simple-stat"]
-  }
-  date {
-    match => [ "[system][syslog][timestamp]", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss" ]
-  }
-```
+| Field | value |
+|---|---|
+| Processor | Grok |
+| Field | message |
+| Patterns | `CPU %{NUMBER:zimbra_simplestat_cpu:float}% RAM %{NUMBER:zimbra_simplestat_ram:float}% HDD %{NUMBER:zimbra_simplestat_hdd:float}%` |
+| Ignore missing | checked |
+| Condition | `ctx.process.name.contains('zimbra-simple-stat')` |
+| Tag | zimbra-simple-stat |
+| Ignore failure | checked |
 
-If you review the `grok` syntax you will see it is a form of a regular expression. If a line of log data matches the regular expression, the parsed fields will be stored in Elastic Search. It is useful to add a recognizable string so that you can find the logs easily. In this case by searching for `zimbra-simple-stat`. It will also help Elastic Search with Indexing.
+This processor is only applied to logs from the zimbra-simple-stat process as defined in the Condition. The `grok` expression parses the fields needed for visualization.
 
-A field `zimbra_simplestat_cpu` is defined and the log value will be stored as a floating point number if there is a match:
+For example the field `zimbra_simplestat_cpu` is defined and the log value will be stored as a floating point number:
 
          CPU %{NUMBER:zimbra_simplestat_cpu:float}%
 
-Restart Logstash so that it becomes aware of the new field:
+Now navigate to Analytics > Discover. Use the search field to find the logs by using:
 
-      systemctl restart logstash
-
-Since we added a `grok` filter you may need to hit the Refresh Field List button which appears in the UI if you go to Stack Management > Index patterns > filebeat-*. You have to click this button to be able to use the new fields. 
-
-You can use the new field for data that is parsed after you click the button. Elastic Stack will not update fields and data retroactively. So even if data for a field is available in historic data, you will not be able to use it for visualizations. 
-
-Now navigate to Analysis > Discover or in older versions Kibana > Discover. Use the search field to find the logs by using:
-
-- `"zimbra-simple-stat"`
+- `process.name:"zimbra-simple-stat"`
 
 ![](screenshots/36-simplestat-discover.png)
 *Searching for zimbra-simple-stat logs.*
@@ -1279,9 +1238,11 @@ Don't forget to hit Save.
 
 #### Adding the visualization to the dashboard
 
-If you already have a Dashboard you can open it by going to Analysis > Dashboard. Or in older versions Kibana > Dashboard. Then click Edit. Then click the Add from library button or the Add menu item in older versions. For more information on how to create a dashboard see the previous chapters. 
+If you already have a Dashboard you can open it by going to Analytics > Dashboard. Then click Edit. Then click the Add from library button or the Add menu item in older versions. For more information on how to create a dashboard see the previous chapters. 
 
 #### Showing only integers for percentage values
+
+__This bug is fixed in Elastic Stack 8__
 
 There is a bug in Kibana that prevents the setting of the amount of decimal places to display in Gauges. So your CPU statistic can show something funny like 56.32333%. To make it show only 56% you have to change the default pattern for percent in Stack Management > Advanced Settings. The default setting is `0,0.[000]%` and needs to be changed to `0%`.
 
