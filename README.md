@@ -989,7 +989,7 @@ In Observability > Logs you can see log data as they come into Elastic Stack usi
 
 ### Analyzing
 
-By using Analyzing > Discover you can see what logs have been processed by Elastic Stack and if the conversion to fields was successful. You can also use the Search feature to do ad-hoc analyzing of logs. Click View Details to find fields you have added in the `grok` filter configuration file. In our case these fields have names that start with `zimbra_`.
+By using Analyzing > Discover you can see what logs have been processed by Elastic Stack and if the conversion to fields was successful. You can also use the Search feature to do ad-hoc analyzing of logs. Click View Details to find fields you have added in the `grok` filter configuration file. In our case these fields have names that start with `cpu-`.
 
 ![](screenshots/11-analytics-discover.png)
 *Dig into the parsed logs in Analytics/Discover.*
