@@ -48,7 +48,7 @@ Please note that the logging tends to consume a large amount of disk space, so e
 
 ## Installing the Centralized Log Server
 
-On the Ubuntu 20 server where we will install the Central Logging server and Elastic Stack, make sure to install all updates by running:
+On the Ubuntu 22 server where we will install the Central Logging server and Elastic Stack, make sure to install all updates by running:
 
       apt update && apt upgrade
       reboot
@@ -514,6 +514,34 @@ $PrivDropToUser syslog
 $PrivDropToGroup syslog
 $WorkDirectory /var/spool/rsyslog
 
+$ModLoad imfile
+
+# error log
+$InputFileName /opt/zimbra/log/nginx.error.log
+$InputFileTag nginx:
+$InputFileStateFile stat-nginx-error
+$InputFileSeverity info
+$InputFileFaility local6
+$InputFilePollInterval 1
+$InputRunFileMonitor
+
+# access log
+$InputFileName /opt/zimbra/log/nginx.access.log
+$InputFileTag nginx:
+$InputFileStateFile stat-nginx-access
+$InputFileSeverity info
+$InputFileFaility local6
+$InputFilePollInterval 1
+$InputRunFileMonitor
+
+$InputFileName /opt/zimbra/log/audit.log
+$InputFileTag zimbra-audit:
+$InputFileStateFile zimbra-audit
+$InputFileSeverity info
+$InputFileFaility local0
+$InputFilePollInterval 1
+$InputRunFileMonitor
+
 $IncludeConfig /etc/rsyslog.d/*.conf
 ```
 
@@ -539,6 +567,10 @@ Finally it should look like this:
          -rw-r--r--  1 syslog syslog 1.5K Apr 12 09:37 rslclient-cert.pem
          -rw-------  1 syslog syslog 5.6K Apr 12 09:37 rslclient-key.pem
 
+Give the syslog user access to the Zimbra audit log:
+
+      usermod -a -G zimbra syslog
+
 Now restart the server:
 
       systemctl restart rsyslog
@@ -557,11 +589,19 @@ This command should return CONNECTED and show the TLS server certificate. If all
 
       Apr 12 11:23:32 zm-zimbra8 barrytest: Hello World
 
-Some logs of Zimbra should already show up. Configure Zimbra to send *all* logs to RSyslog by issuing:
+Some logs of Zimbra should already show up. Configure Zimbra Mailbox to send *all* logs to RSyslog by issuing:
 
       su zimbra
       zmprov mcf zimbraLogToSysLog TRUE
       zmcontrol restart
+
+### Debugging RSyslog
+
+If you have trouble getting logs into RSyslog you can enable debugging by adding below configuration to `/etc/rsyslog.conf`. For example if RSyslog does not have read permission to a specific log file you can find it this way. Don't forget `systemctl restart rsyslog`:
+
+      $DebugLevel 2
+      $DebugFile /root/RSYSLOG.txt
+
 
 ### References
 
@@ -913,13 +953,35 @@ As you can see this log has additional fields called cpu-idle, cpu-iowait, cpu-s
 
 Setting up these filters is the hardest and most time consuming part of setting up Elastic Stack. See the dedicated how-to further in the guide to write your own. 
 
+### Grok for failed login attempts from audit.log
+
+You can add another processor in the Ingress Pipeline to find failed login attempts. Example authentication error from audit.log:
+
+```
+2023-02-21 07:15:18,581 WARN  [qtp1489092624-139://localhost:8080/service/soap/BatchRequest] [name=admin@zimbra8.barrydegraaff.nl;oip=192.168.1.126;ua=zclient/8.8.15_GA_4484;soapId=1a5ec841;] security - cmd=Auth; account=admin@zimbra8.barrydegraaff.nl; protocol=soap; error=authentication failed for [admin], invalid password;
+```
+
+The grok pattern to match:
+
+```
+.*name=%{DATA:failuser};.*p=%{DATA:failip};.*authentication failed for .*$
+```
+
+The result:
+```
+{
+  "failuser": "admin@zimbra8.barrydegraaff.nl",
+  "failip": "192.168.1.126"
+}
+```
+
 ## Understanding Kibana UI
 
 This chapter is a walk-through for the Kibana UI. It shows the locations in the Kibana UI where you can find and analyze if the configuration of the previous steps in this guide are working. In the next chapter this guide will show you how to define more fields for logs that Elastic Stack is not parsing yet.
 
 ### Observability
 
-In Observability->Logs you can see log data as they come into Elastic Stack using the Stream Live option. If some log is missing here, it means it did not pass from RSyslog to Filebeat and you have to go back to the command line and look at the Installing Elastic Stack chapter to fix it. 
+In Observability > Logs you can see log data as they come into Elastic Stack using the Stream Live option. If some log is missing here, it means it did not pass from RSyslog to Filebeat and you have to go back to the command line for Rsyslog debugging and look at the Ingest Pipeline chapter to fix it `grok` patterns. 
 
 ![](screenshots/10-observability-logs.png)
 *Logs are in Observability/Logs.*
@@ -929,7 +991,7 @@ In Observability->Logs you can see log data as they come into Elastic Stack usin
 
 ### Analyzing
 
-By using Analyzing->Discover you can see what logs have been processed by Elastic Stack and if the conversion to fields was successful. You can also use the Search feature to do ad-hoc analyzing of logs. Click View Details to find fields you have added in the `grok` filter configuration file. In our case these fields have names that start with `zimbra_`.
+By using Analyzing > Discover you can see what logs have been processed by Elastic Stack and if the conversion to fields was successful. You can also use the Search feature to do ad-hoc analyzing of logs. Click View Details to find fields you have added in the `grok` filter configuration file. In our case these fields have names that start with `zimbra_`.
 
 ![](screenshots/11-analytics-discover.png)
 *Dig into the parsed logs in Analytics/Discover.*
@@ -953,7 +1015,7 @@ In Kibana you can define one or more dashboards to visualize statistics of your 
 
 The count visualization is the simplest form of visualization in Kibana. It counts the number of times a specific log entries matches a search query. Benefits of this visualization is that it just works by searching through the `message` field, which is basically a raw line of log data. So you do not need to parse fields with a `grok` filter.
 
-First navigate to Analysis -> Discover or in older versions Kibana -> Discover. Use the search field to find the logs. Here are some Postfix examples:
+First navigate to Analysis > Discover or in older versions Kibana > Discover. Use the search field to find the logs. Here are some Postfix examples:
 
 - `message:"postfix" and "status=bounced"`
 - `message:"postfix" and "status=deferred"`
@@ -966,7 +1028,7 @@ Once you are satisfied with your query, hit the Save button.
 
 #### Create the count visualization
 
-To create a visualization go to Analytics -> Visualize Library. Or if you use an older version go to Kibana -> Visualize. 
+To create a visualization go to Analytics > Visualize Library. Or if you use an older version go to Kibana > Visualize. 
 
 ![](screenshots/16-create-visualization.png)
 *Click Create Visualization.*
@@ -985,7 +1047,7 @@ Now Kibana will show the saved search on the X axis, but since we did not specif
 ![](screenshots/20-visual-but-not-configured.png)
 *After selecting the source data, we see a count of all logs, but that is not useful.*
 
-For the Y axis select Aggregation -> Count and for X axis select Aggregation -> Date Histogram and use the @timestamp field. The timestamp is the time and date that was parsed from the log file. There are many detailed settings which this guide does not explain, you can play around with them and hit the Save button once you are ready.
+For the Y axis select Aggregation > Count and for X axis select Aggregation > Date Histogram and use the @timestamp field. The timestamp is the time and date that was parsed from the log file. There are many detailed settings which this guide does not explain, you can play around with them and hit the Save button once you are ready.
 
 Here are some screenshots that show the final result:
 
@@ -1002,7 +1064,7 @@ Don't forget to hit Save.
 
 #### Create a dashboard
 
-Create a new Dashboard by going to Analysis -> Dashboard and New Dashboard. In older versions Kibana -> Dashboard and New Dashboard. 
+Create a new Dashboard by going to Analysis > Dashboard and New Dashboard. In older versions Kibana > Dashboard and New Dashboard. 
 
 ![](screenshots/22-new-dashboard.png)
 *Click Add from Library to add the Visualization.*
@@ -1046,7 +1108,7 @@ This `grok` filter parses a log line that looks like this:
 The memory statistics are generated by the vmstat (virtual memory statistics) monitoring utility, for more information on what parameters are reported see the references section.
 
 
-First navigate to Analysis -> Discover or in older versions Kibana -> Discover. Use the search field to find the logs from vmstat. By using:
+First navigate to Analysis > Discover or in older versions Kibana > Discover. Use the search field to find the logs from vmstat. By using:
 
 - `"zmstat vm.csv"`
 
@@ -1067,7 +1129,7 @@ Once you are satisfied with your query, hit the Save button.
 
 #### Create the number visualization
 
-To create a visualization go to Analytics -> Visualize Library. Or if you use an older version go to Kibana -> Visualize. 
+To create a visualization go to Analytics > Visualize Library. Or if you use an older version go to Kibana > Visualize. 
 
 ![](screenshots/16-create-visualization.png)
 *Click Create Visualization.*
@@ -1083,7 +1145,7 @@ To create a visualization go to Analytics -> Visualize Library. Or if you use an
 
 Now Kibana will show the saved search and try to guess how to visualize it. In most cases the settings for the X axis are messed up and you will need to configure it to make sense.
 
-For the Y axis select Aggregation -> Max and select a field from the saved query. Repeat this for all fields. For X axis select Aggregation -> Date Histogram and use the @timestamp field. The timestamp is the time and date that was parsed from the log file. Hit the Save button once you are ready. 
+For the Y axis select Aggregation > Max and select a field from the saved query. Repeat this for all fields. For X axis select Aggregation > Date Histogram and use the @timestamp field. The timestamp is the time and date that was parsed from the log file. Hit the Save button once you are ready. 
 
 Here are some screenshots that show the final result:
 
@@ -1100,7 +1162,7 @@ Don't forget to hit Save.
 
 #### Adding the visualization to the dashboard
 
-If you already have a Dashboard you can open it by going to Analysis -> Dashboard. Or in older versions Kibana -> Dashboard. Then click Edit. Then click the Add from library button or the Add menu item in older versions. For more information on how to create a dashboard see the previous chapter. The final result will look something like this:
+If you already have a Dashboard you can open it by going to Analysis > Dashboard. Or in older versions Kibana > Dashboard. Then click Edit. Then click the Add from library button or the Add menu item in older versions. For more information on how to create a dashboard see the previous chapter. The final result will look something like this:
 
 ![](screenshots/34-result-line.png)
 *The visualization is now on the Dashboard.*
@@ -1173,11 +1235,11 @@ Restart Logstash so that it becomes aware of the new field:
 
       systemctl restart logstash
 
-Since we added a `grok` filter you may need to hit the Refresh Field List button which appears in the UI if you go to Stack Management -> Index patterns -> filebeat-*. You have to click this button to be able to use the new fields. 
+Since we added a `grok` filter you may need to hit the Refresh Field List button which appears in the UI if you go to Stack Management > Index patterns > filebeat-*. You have to click this button to be able to use the new fields. 
 
 You can use the new field for data that is parsed after you click the button. Elastic Stack will not update fields and data retroactively. So even if data for a field is available in historic data, you will not be able to use it for visualizations. 
 
-Now navigate to Analysis -> Discover or in older versions Kibana -> Discover. Use the search field to find the logs by using:
+Now navigate to Analysis > Discover or in older versions Kibana > Discover. Use the search field to find the logs by using:
 
 - `"zimbra-simple-stat"`
 
@@ -1200,7 +1262,7 @@ When writing the `grok` filter you can use the `grok` debugger in the Kibana UI.
 
 #### Create the percentage visualization
 
-To create a visualization go to Analytics -> Visualize Library. Or if you use an older version go to Kibana -> Visualize. 
+To create a visualization go to Analytics > Visualize Library. Or if you use an older version go to Kibana > Visualize. 
 
 ![](screenshots/16-create-visualization.png)
 *Click Create Visualization.*
@@ -1224,11 +1286,11 @@ Don't forget to hit Save.
 
 #### Adding the visualization to the dashboard
 
-If you already have a Dashboard you can open it by going to Analysis -> Dashboard. Or in older versions Kibana -> Dashboard. Then click Edit. Then click the Add from library button or the Add menu item in older versions. For more information on how to create a dashboard see the previous chapters. 
+If you already have a Dashboard you can open it by going to Analysis > Dashboard. Or in older versions Kibana > Dashboard. Then click Edit. Then click the Add from library button or the Add menu item in older versions. For more information on how to create a dashboard see the previous chapters. 
 
 #### Showing only integers for percentage values
 
-There is a bug in Kibana that prevents the setting of the amount of decimal places to display in Gauges. So your CPU statistic can show something funny like 56.32333%. To make it show only 56% you have to change the default pattern for percent in Stack Management -> Advanced Settings. The default setting is `0,0.[000]%` and needs to be changed to `0%`.
+There is a bug in Kibana that prevents the setting of the amount of decimal places to display in Gauges. So your CPU statistic can show something funny like 56.32333%. To make it show only 56% you have to change the default pattern for percent in Stack Management > Advanced Settings. The default setting is `0,0.[000]%` and needs to be changed to `0%`.
 
 
 ![](screenshots/41-percentage-format.png)
@@ -1301,13 +1363,15 @@ Finally run:
       heartbeat setup -e
       systemctl restart heartbeat-elastic
 
-You should now see a new menu item in Kibana under Observability -> Uptime that looks like this:
+You should now see a new menu item in Kibana under Observability > Uptime that looks like this:
 
 ![](screenshots/42-heartbeat.png)
 *Kibana Uptime application.*
 
 
 ## Bonus: Grok patterns for Audit and Nginx log
+
+__This chapter is written for and last verified for ELK 7.x it may not work for you. See the chapter Grok for failed login attempts from audit.log above to do the same on ELK 8.x.__
 
 In this bonus chapter your can find `grok` patterns for the authentication log (/opt/zimbra/log/audit.log) and the proxy log (/opt/zimbra/log/nginx.access.log). These can be used in case you want to use `filebeat` to read the logs directly and not use centralized logging based on RSyslog.
 
