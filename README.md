@@ -521,7 +521,7 @@ $InputFileName /opt/zimbra/log/nginx.error.log
 $InputFileTag nginx:
 $InputFileStateFile stat-nginx-error
 $InputFileSeverity info
-$InputFileFaility local6
+$InputFileFacility local6
 $InputFilePollInterval 1
 $InputRunFileMonitor
 
@@ -530,7 +530,7 @@ $InputFileName /opt/zimbra/log/nginx.access.log
 $InputFileTag nginx:
 $InputFileStateFile stat-nginx-access
 $InputFileSeverity info
-$InputFileFaility local6
+$InputFileFacility local6
 $InputFilePollInterval 1
 $InputRunFileMonitor
 
@@ -538,7 +538,7 @@ $InputFileName /opt/zimbra/log/audit.log
 $InputFileTag zimbra-audit:
 $InputFileStateFile zimbra-audit
 $InputFileSeverity info
-$InputFileFaility local0
+$InputFileFacility local0
 $InputFilePollInterval 1
 $InputRunFileMonitor
 
@@ -1460,3 +1460,4 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+v
