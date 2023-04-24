@@ -821,6 +821,7 @@ filebeat.inputs:
   id: my-filestream-id
   enabled: true
   paths:
+    - /var/log/syslog
     - /var/log/*.log
 
 filebeat.config.modules:
