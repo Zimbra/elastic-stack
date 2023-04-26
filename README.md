@@ -37,7 +37,7 @@ Please note that most of the config files and scripts that are in this guide are
 
 ## Hardware and Software considerations
 
-You will need one additional virtual machine that will serve as the RSyslog logging server and the Elastic Stack server. You can optionally split the two but this is not really needed and not described in this guide. You will have to pick an operating system that is both supported by RSyslog and Elastic Stack. The instructions in this guide are for Ubuntu 20.04 LTS. In detail:
+You will need one additional virtual machine that will serve as the RSyslog logging server and the Elastic Stack server. You can optionally split the two but this is not really needed and not described in this guide. You will have to pick an operating system that is both supported by RSyslog and Elastic Stack. The instructions in this guide are for setting up Elastic on Ubuntu 22.04 LTS and Zimbra 9 or 10 on Ubuntu 20.04 LTS. Details for Elastic system:
 
 - OS: Ubuntu 22.04 LTS
 - RAM: 8GB
@@ -683,8 +683,10 @@ Kibana is the Web application that allows you to visualize the logs and create d
 
 Open `/etc/kibana/kibana.yml` add add the following:
 
-         server.publicBaseUrl: "https://elastic.barrydegraaff.nl/"
-         security.showInsecureClusterWarning: false
+```
+server.publicBaseUrl: "https://elastic.barrydegraaff.nl/"
+security.showInsecureClusterWarning: false
+```
 
 Finally start Kibana:
 
@@ -818,11 +820,10 @@ Open the config file `/etc/filebeat/filebeat.yml` and configure it as follows:
 ```
 filebeat.inputs:
 - type: filestream
-  id: my-filestream-id
+  id: zimbra-filestream
   enabled: true
   paths:
     - /var/log/syslog
-    - /var/log/*.log
 
 filebeat.config.modules:
   path: ${path.config}/modules.d/*.yml
@@ -847,22 +848,9 @@ processors:
   - add_kubernetes_metadata: ~
 ```
 
-Open the config file `/etc/filebeat/modules.d/system.yml` and configure it as follows:
-
-```
-- module: system
-  syslog:
-    enabled: true
-
-  auth:
-    enabled: true
-```
-
 Setup Filebeat index
 
-      sudo filebeat modules enable system
-      sudo filebeat modules list
-      sudo filebeat setup --pipelines --modules system -M "system.syslog.enabled=true" -M "system.auth.enabled=true"
+      sudo filebeat setup --pipelines
 
 This command should output:
 
@@ -896,6 +884,8 @@ Note: when running `filebeat setup` with `-E` or `-M` option one basically tells
 - https://www.digitalocean.com/community/tutorials/how-to-install-elasticsearch-logstash-and-kibana-elastic-stack-on-ubuntu-20-04
 - https://www.digitalocean.com/community/tutorials/how-to-install-java-with-apt-on-ubuntu-20-04
 - https://kifarunix.com/install-elk-stack-8-x-on-ubuntu/
+- https://www.elastic.co/guide/en/beats/filebeat/current/filebeat-input-filestream.html
+- https://www.elastic.co/guide/en/beats/filebeat/current/configuration-filebeat-options.html
 
 Bugs:
 
@@ -904,7 +894,22 @@ Bugs:
 
 ## Ingest Pipelines
 
+Ingest Pipelines can be used to remove or transform fields, extract values from text, and enrich your data before indexing.
+
 In an older version of this guide the adding of fields was done by configuring [/etc/logstash/conf.d/10-syslog-filter.conf](https://raw.githubusercontent.com/Zimbra/elastic-stack/main/rsyslog-elastic/logstash/conf.d/10-syslog-filter.conf). This no longer seems to work in Elasticsearch 8.x and can now be done via the UI.
+
+In this version of the guide we switched to manual Filebeat and Ingress pipeline configuration. This will make it easier to maintain this guide as the Filebeat system module and automatically generated pipelines change frequently and require more complex debugging if they don't work. Some screenshots in this guide still show the automatically generated Ingest pipelines such as `filebeat-8.7.0-system-pipeline`. In the new version of the guide you will learn how to set-up a clean pipeline called `zimbra`.
+
+If you completed the previous paragraph you should see logs coming into Elastic Stack. 
+
+Go to Stack Management > Ingest Pipelines and click Create Pipeline.
+
+![](screenshots/04-create-pipeline.png)
+
+Set the name of the pipeline to `zimbra` and optionally set a version and description.
+
+![](screenshots/05-zimbra-pipeline.png)
+
 
 Elastic Stack uses a language called `grok` that relies on regular expressions to convert raw logs into fields. An example of CPU statistics logged from Zimbra:
 
@@ -916,11 +921,7 @@ This can be parsed with `grok` as follows:
 zmstat cpu.csv:.*:: %{DATA:statdate} %{DATA:stattime}, %{NUMBER:cpu-user:float}, %{NUMBER:cpu-nice:float}, %{NUMBER:cpu-sys:float}, %{NUMBER:cpu-idle:float}, %{NUMBER:cpu-iowait:float}, %{NUMBER:cpu-irq:float}, %{NUMBER:cpu-soft-irq:float}
 ```
 
-To actually use this `grok` expression you must add it to the Ingest Pipeline. Go to Stack Management > Ingest Pipelines and edit the filebeat-X.X.X-system-syslog-pipeline.
-
-![](screenshots/03-01-pipeline-edit.png)
-
-Scroll down and click Add a processor, make sure not to click the one under Failure processor:
+You can use this `grok` expression by adding it as a processor in the Zimbra pipeline. Click Add a processor under Processors. Make sure not to click the one under Failure processors.
 
 ![](screenshots/03-02-add-processor.png)
 
@@ -938,11 +939,58 @@ In the Manage Processor dialog, set the following:
 
 With the settings in the table we tell Ingress to apply the `grok` expression on a field called `Message`. The parsed `grok` result is then stored into new fields that can be used for further analysis and visualization. The `Condition` can be used to conditionally apply the `grok` expression, in this case only on logs coming from `zmstat cpu`. You can add multiple processors to deal with different types of logs.
 
-Then click Update and Save Pipeline.
+Then click Add (or Update) and Save Pipeline.
 
 ![](screenshots/03-03-processor.png)
 
-Changes made to the Ingress Pipeline will be applied to newly received logs in Elastic Stack. You can see the new fields by going to Observability > Logs > Stream find a search for `"message":"zmstat cpu.csv"` and select View details for any of the displayed logs.
+Configure Filebeat to use this pipeline for incoming logs, from the command line:
+
+```
+sudo nano /etc/filebeat/filebeat.yml
+```
+
+And add `pipeline: zimbra` under `filebeat.inputs` the complete config file will look like this:
+
+```
+filebeat.inputs:
+- type: filestream
+  id: zimbra-filestream
+  pipeline: zimbra
+  enabled: true
+  paths:
+    - /var/log/syslog
+
+filebeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+  reload.enabled: false
+
+setup.template.settings:
+  index.number_of_shards: 1
+
+setup.dashboards.enabled: true
+
+setup.kibana:
+  host: "localhost:5601"
+
+output.elasticsearch:
+  hosts: ["localhost:9200"]
+
+processors:
+  - add_host_metadata:
+      when.not.contains.tags: forwarded
+  - add_cloud_metadata: ~
+  - add_docker_metadata: ~
+  - add_kubernetes_metadata: ~
+```
+
+Then restart logstash and filebeat to load the change:
+
+```
+systemctl restart filebeat
+systemctl restart logstash
+```
+
+Changes made to the Ingress Pipeline will be applied to newly received logs in Elastic Stack. You can see the new fields by going to Observability > Logs > Stream find a search for `"message":"zmstat cpu.csv"` and select View details for any of the displayed logs. The command line steps for configuring the pipeline only need to be done once.
 
 ![](screenshots/03-04-details-menu.png)
 
@@ -978,6 +1026,47 @@ When writing the `grok` filter you can use the `grok` debugger in the Kibana UI.
 
 ![](screenshots/37b-grok-debugger.png)
 *The `grok` debugger tool*
+
+### Debugging Ingress Pipelines
+
+Sometimes fields are not added even if you tried the Grok debugger and have configured Filebeat correctly. In the Kibana web-interface there is a test feature that can be used to debug Ingress Pipelines.
+
+Go to Stack Management > Ingest Pipelines > Edit the Zimbra pipeline then click Add documents
+
+![](screenshots/06-test-pipeline.png)
+
+Select Add test document from an index.
+
+![](screenshots/06-02-document-from-index.png)
+
+In another browser tab go to Observability > Logs > Stream and find a log entry that you would like to parse.
+
+![](screenshots/06-01-example-log-entry.png)
+
+In the top of the log entry you can find the Document ID and Index that can be used to add the test document. Copy paste the and click Add document:
+
+![](screenshots/06-03-document-add.png)
+
+Then click Run the pipeline to perform a test.
+
+![](screenshots/06-03-document-added.png)
+
+After the running the test you can scroll to your grok processor and an icon will indicate if the grok processor ran successful, had a failure or was skipped due to the condition configured in the condition field. An example of a failure:
+
+![](screenshots/06-04-grok-fail.png)
+
+More details can be found in the output tab:
+
+![](screenshots/06-05-grok-fail-output.png)
+
+While debugging it is best to set the following in your grok processor:
+
+| Field | value |
+|---|---|
+| Ignore missing | unchecked |
+| Ignore failure | unchecked |
+
+Once it works, change these back to checked, and click save on both your grok processor and your pipeline.
 
 ## Understanding Kibana UI
 
@@ -1428,6 +1517,8 @@ Using the data from the Nginx log one can display the number of server responses
 
 - https://logz.io/blog/logstash-grok/
 - https://www.elastic.co/guide/en/logstash/current/plugins-filters-grok.html
+- https://alexmarquardt.com/using-grok-with-elasticsearch-to-add-structure-to-your-data/
+- https://www.elastic.co/guide/en/elasticsearch/reference/master/ingest.html
 - https://www.digitalocean.com/community/tutorials/adding-logstash-filters-to-improve-centralized-logging
 
 
@@ -1460,4 +1551,3 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-v
